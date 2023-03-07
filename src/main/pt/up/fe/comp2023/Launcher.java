@@ -81,6 +81,8 @@ public class Launcher {
         System.out.println(methodVisitor.getMethodsParams());
         System.out.println("Return types: ");
         System.out.println(methodVisitor.getMethodsReturnTypes());
+        System.out.println("Method locals: ");
+        System.out.println(methodVisitor.getMethodsLocals());
 
     }
 

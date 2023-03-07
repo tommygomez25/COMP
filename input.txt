@@ -9,7 +9,9 @@ class HelloWorld extends a {
 
     public int newMethod(int a, String b, Object c) {
         int a;
+        int[] d;
         a = 2 * (1 + 2);
+        int[] e;
         return a;
     }
 

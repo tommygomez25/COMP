@@ -21,6 +21,7 @@ public class MethodVisitor extends AJmmVisitor<Void, Void> {
         addVisit("Program", this::dealWithProgram);
         addVisit("Class", this::dealWithClass);
         addVisit("Method", this::dealWithMethod);
+        addVisit("Field", this::dealWithField);
     }
 
     private Void dealWithProgram(JmmNode jmmNode, Void v){
@@ -82,6 +83,26 @@ public class MethodVisitor extends AJmmVisitor<Void, Void> {
 
 
         // get the local variables
+        localVariables.put(methodName, new ArrayList<Symbol>());
+        for(JmmNode child: jmmNode.getChildren()){
+            if(child.getKind().equals("Field")){
+                visit(child, null);
+            }
+        }
+        return null;
+    }
+
+    private Void dealWithField(JmmNode jmmNode, Void v){
+        String methodName = this.methods.get(this.methods.size() - 1);
+        boolean isArray = jmmNode.getChildren().get(0).get("isArray").equals("true");
+        String type = jmmNode.getChildren().get(0).get("typeName");
+        String name = jmmNode.get("fieldName");
+
+        Type typeObject = new Type(type, isArray);
+        Symbol symbol = new Symbol(typeObject, name);
+
+        localVariables.get(methodName).add(symbol);
+
         return null;
     }
 
@@ -95,5 +116,9 @@ public class MethodVisitor extends AJmmVisitor<Void, Void> {
 
     Map<String, Type> getMethodsReturnTypes() {
         return returnTypes;
+    }
+
+    Map<String, List<Symbol>> getMethodsLocals() {
+        return localVariables;
     }
 }
