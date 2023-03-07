@@ -18,9 +18,10 @@ import org.junit.Test;
 public class GrammarTest {
 
 
-    private static final String IMPORT = "";
-    private static final String MAIN_METHOD = "";
-    private static final String INSTANCE_METHOD = "";
+    private static final String IMPORT = "importDeclaration";
+    private static final String MAIN_METHOD = "methodDeclaration";
+    private static final String INSTANCE_METHOD = "methodDeclaration";
+    private static final String VAR_DECLARATION = "varDeclaration";
     private static final String STATEMENT = "statement";
     private static final String EXPRESSION = "expression";
 
@@ -63,6 +64,16 @@ public class GrammarTest {
     @Test
     public void testStmtScope() {
         TestUtils.parseVerbose("{a; b; c;}", STATEMENT);
+    }
+
+    @Test
+    public void testStringDeclaration() {
+        TestUtils.parseVerbose("String s;",VAR_DECLARATION );
+    }
+
+    @Test
+    public void testIntArrayDeclaration() {
+        TestUtils.parseVerbose("int[] a;",VAR_DECLARATION );
     }
 
     @Test
@@ -129,6 +140,7 @@ public class GrammarTest {
     public void testExprParen() {
         TestUtils.parseVerbose("(10)", EXPRESSION);
     }
+
 
     @Test
     public void testExprMemberCall() {

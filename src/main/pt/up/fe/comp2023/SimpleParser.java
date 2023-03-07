@@ -48,6 +48,16 @@ public class SimpleParser implements JmmParser {
             // Transforms tokens into a parse tree
             var parser = new JavammParser(tokens);
 
+            var numErrors = parser.getNumberOfSyntaxErrors();
+
+            //  If there are errors, you must create a Report indicating the number of errors.
+
+            var message = "There were " + numErrors + " syntax errors during parsing, terminating";
+            if (numErrors > 0) {
+                return JmmParserResult.newError(new Report(ReportType.WARNING, Stage.SYNTATIC, -1,
+                        message));
+            }
+
             // Convert ANTLR CST to JmmNode AST
             return AntlrParser.parse(lex, parser, startingRule)
                     // If there were no errors and a root node was generated, create a JmmParserResult with the node

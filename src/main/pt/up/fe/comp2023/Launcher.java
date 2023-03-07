@@ -37,8 +37,15 @@ public class Launcher {
         // Parse stage
         JmmParserResult parserResult = parser.parse(code, config);
 
-        // Check if there are parsing errors
-        TestUtils.noErrors(parserResult.getReports());
+        // Check if there are parsing errors and print message
+        if (parserResult.getReports().size() > 0) {
+            System.out.println("There were " + parserResult.getReports().size() + " parsing errors.");
+        }
+
+        // Print AST
+        System.out.println(parserResult.getRootNode());
+
+
 
         // ... add remaining stages
     }
@@ -60,5 +67,6 @@ public class Launcher {
 
         return config;
     }
+
 
 }
