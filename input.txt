@@ -1,0 +1,21 @@
+import foo.bar.a;
+import foo.bar.b;
+
+class HelloWorld extends a {
+    int field1;
+    boolean field2;
+    String field3;
+    int[] field4;
+
+    public int newMethod(int a, String b, Object c) {
+        int a;
+        a = 2 * (1 + 2);
+        return a;
+    }
+
+    public static void main(String[] args) {
+        String a;
+        a = 2 * (1 + 2);
+    }
+
+}

@@ -21,9 +21,13 @@ public class GrammarTest {
     private static final String IMPORT = "importDeclaration";
     private static final String MAIN_METHOD = "methodDeclaration";
     private static final String INSTANCE_METHOD = "methodDeclaration";
-    private static final String VAR_DECLARATION = "varDeclaration";
     private static final String STATEMENT = "statement";
     private static final String EXPRESSION = "expression";
+    private static final String VAR_DECLARATION = "varDeclaration";
+    private static final String CLASS = "classDeclaration";
+
+    @Test
+    public void testStringDeclaration(){ TestUtils.parseVerbose("String a;", VAR_DECLARATION);}
 
     @Test
     public void testImportSingle() {
@@ -36,8 +40,13 @@ public class GrammarTest {
     }
 
     @Test
+    public void testArrayDeclaration() {
+        TestUtils.parseVerbose("int[] a;", VAR_DECLARATION);
+    }
+
+    @Test
     public void testClass() {
-        TestUtils.parseVerbose("class Foo extends Bar {}");
+        TestUtils.parseVerbose("class Foo extends Bar {}", CLASS);
     }
 
     @Test
@@ -64,16 +73,6 @@ public class GrammarTest {
     @Test
     public void testStmtScope() {
         TestUtils.parseVerbose("{a; b; c;}", STATEMENT);
-    }
-
-    @Test
-    public void testStringDeclaration() {
-        TestUtils.parseVerbose("String s;",VAR_DECLARATION );
-    }
-
-    @Test
-    public void testIntArrayDeclaration() {
-        TestUtils.parseVerbose("int[] a;",VAR_DECLARATION );
     }
 
     @Test
@@ -140,7 +139,6 @@ public class GrammarTest {
     public void testExprParen() {
         TestUtils.parseVerbose("(10)", EXPRESSION);
     }
-
 
     @Test
     public void testExprMemberCall() {
@@ -252,4 +250,6 @@ public class GrammarTest {
         TestUtils.parseVerbose("1 && 2 < 3 + 4 - 5 * 6 / 7", EXPRESSION);
     }
 
+
 }
+
