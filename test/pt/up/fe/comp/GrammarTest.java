@@ -18,11 +18,16 @@ import org.junit.Test;
 public class GrammarTest {
 
 
-    private static final String IMPORT = "";
-    private static final String MAIN_METHOD = "";
-    private static final String INSTANCE_METHOD = "";
+    private static final String IMPORT = "importDeclaration";
+    private static final String MAIN_METHOD = "methodDeclaration";
+    private static final String INSTANCE_METHOD = "methodDeclaration";
     private static final String STATEMENT = "statement";
     private static final String EXPRESSION = "expression";
+    private static final String VAR_DECLARATION = "varDeclaration";
+    private static final String CLASS = "classDeclaration";
+
+    @Test
+    public void testStringDeclaration(){ TestUtils.parseVerbose("String a;", VAR_DECLARATION);}
 
     @Test
     public void testImportSingle() {
@@ -35,8 +40,13 @@ public class GrammarTest {
     }
 
     @Test
+    public void testArrayDeclaration() {
+        TestUtils.parseVerbose("int[] a;", VAR_DECLARATION);
+    }
+
+    @Test
     public void testClass() {
-        TestUtils.parseVerbose("class Foo extends Bar {}");
+        TestUtils.parseVerbose("class Foo extends Bar {}", CLASS);
     }
 
     @Test
@@ -239,5 +249,6 @@ public class GrammarTest {
     public void testExprChain() {
         TestUtils.parseVerbose("1 && 2 < 3 + 4 - 5 * 6 / 7", EXPRESSION);
     }
+
 
 }
