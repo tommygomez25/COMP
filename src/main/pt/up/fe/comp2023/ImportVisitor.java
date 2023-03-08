@@ -36,7 +36,6 @@ public class ImportVisitor extends AJmmVisitor<Void, Void> {
                 for (int i = 1; i < importValues.size(); i++) {
                     finalString.append(".").append(importValues.get(i));
                 }
-
             }
             imports.add(finalString.toString());
             return null;
