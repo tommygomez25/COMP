@@ -25,21 +25,19 @@ public class JmmAnalysisImpl implements JmmAnalysis {
             JmmNode node = jmmParserResult.getRootNode();
             MySymbolTable mySymbolTable = new MySymbolTable();
             ClassVisitor classVisitor = new ClassVisitor();
-            classVisitor.visit(jmmParserResult.getRootNode());
+            classVisitor.visit(node);
             mySymbolTable.setClassName(classVisitor.getClassName());
             mySymbolTable.setSuperName(classVisitor.getSuperClassName());
             mySymbolTable.setFields(classVisitor.getFields());
             ImportVisitor importVisitor = new ImportVisitor();
-            importVisitor.visit(jmmParserResult.getRootNode());
+            importVisitor.visit(node);
             mySymbolTable.setImports(importVisitor.getImports());
             MethodVisitor methodVisitor = new MethodVisitor();
-            methodVisitor.visit(jmmParserResult.getRootNode());
+            methodVisitor.visit(node);
             mySymbolTable.setMethods(methodVisitor.getMethods());
             mySymbolTable.setMethodsReturnTypes(methodVisitor.getMethodsReturnTypes());
             mySymbolTable.setMethodsParameters(methodVisitor.getMethodsParams());
             mySymbolTable.setMethodsLocalVariables(methodVisitor.getMethodsLocals());
-
-
 
             return new JmmSemanticsResult(jmmParserResult, mySymbolTable, Collections.emptyList());
         }
