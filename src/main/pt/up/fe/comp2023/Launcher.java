@@ -51,38 +51,26 @@ public class Launcher {
         // Check if there are parsing errors
         TestUtils.noErrors(parserResult.getReports());
 
-        // instantiate mySymbolTable
         MySymbolTable mySymbolTable = new MySymbolTable();
         ClassVisitor classVisitor = new ClassVisitor();
         classVisitor.visit(parserResult.getRootNode());
         mySymbolTable.setClassName(classVisitor.getClassName());
         mySymbolTable.setSuperName(classVisitor.getSuperClassName());
         mySymbolTable.setFields(classVisitor.getFields());
-        System.out.println("Classes: ");
-        System.out.println(mySymbolTable.getClassName());
-        System.out.println(mySymbolTable.getSuper());
-        System.out.println("Class fields: ");
-        for (Symbol field : mySymbolTable.getFields()) {
-            System.out.println(field.getType() + " Name " + field.getName());
-        }
 
         ImportVisitor importVisitor = new ImportVisitor();
         importVisitor.visit(parserResult.getRootNode());
         mySymbolTable.setImports(importVisitor.getImports());
-        System.out.println("Imports: ");
-        System.out.println(mySymbolTable.getImports());
 
         MethodVisitor methodVisitor = new MethodVisitor();
         methodVisitor.visit(parserResult.getRootNode());
         mySymbolTable.setMethods(methodVisitor.getMethods());
-        System.out.println("Methods: ");
-        System.out.println(mySymbolTable.getMethods());
-        System.out.println("Method params: ");
-        System.out.println(methodVisitor.getMethodsParams());
-        System.out.println("Return types: ");
-        System.out.println(methodVisitor.getMethodsReturnTypes());
-        System.out.println("Method locals: ");
-        System.out.println(methodVisitor.getMethodsLocals());
+        mySymbolTable.setMethodsReturnTypes(methodVisitor.getMethodsReturnTypes());
+        mySymbolTable.setMethodsParameters(methodVisitor.getMethodsParams());
+        mySymbolTable.setMethodsLocalVariables(methodVisitor.getMethodsLocals());
+
+        System.out.println("Symbol table: \n");
+        System.out.println(mySymbolTable.print());
 
     }
 

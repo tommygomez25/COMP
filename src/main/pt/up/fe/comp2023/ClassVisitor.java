@@ -33,13 +33,15 @@ public class ClassVisitor extends AJmmVisitor<Void, Void> {
 
     private Void dealWithClass(JmmNode jmmNode, Void v){
         this.className = jmmNode.get("className");
-        this.superClassName = jmmNode.get("extendName");
+        if(jmmNode.getAttributes().contains("extendName")){
+            this.superClassName = jmmNode.get("extendName");
+        }
+
+
         for(JmmNode child: jmmNode.getChildren()){
             if(child.getKind().equals("Field")){
                 String fieldName = child.get("fieldName");
-                boolean isArray = false;
-                if(child.getChildren().get(0).get("isArray").equals("true"))
-                    isArray = true;
+                boolean isArray = child.getChildren().get(0).get("isArray").equals("true");
                 String t = child.getChildren().get(0).get("typeName");
                 Type type = new Type(t, isArray);
                 fields.add(new Symbol(type, fieldName));

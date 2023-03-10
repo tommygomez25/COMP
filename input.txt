@@ -1,11 +1,16 @@
 import foo.bar.a;
 import foo.bar.b;
 
-class HelloWorld extends a {
+class HelloWorld{
     int field1;
     boolean field2;
     String field3;
-    int[] field4;
+    int[] field4
+
+    public static void main(String[] args) {
+            String a;
+            a = 2 * (1 + 2);
+    }
 
     public int newMethod(int a, String b, Object c) {
         int a;
@@ -15,9 +20,6 @@ class HelloWorld extends a {
         return a;
     }
 
-    public static void main(String[] args) {
-        String a;
-        a = 2 * (1 + 2);
-    }
+
 
 }
