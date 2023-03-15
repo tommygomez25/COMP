@@ -2,6 +2,6 @@ import foo.bar.a;
 import foo.bar.b;
 
 class HelloWorld{
-    int b = "a";
+    int $a;
 
 }
