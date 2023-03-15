@@ -5,11 +5,13 @@ class HelloWorld{
     int field1;
     boolean field2;
     String field3;
-    int[] field4
+    int[] field4;
 
     public static void main(String[] args) {
             String a;
+            boolean jeff;
             a = 2 * (1 + 2);
+            jeff = true;
     }
 
     public int newMethod(int a, String b, Object c) {

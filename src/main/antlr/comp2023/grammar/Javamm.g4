@@ -55,9 +55,9 @@ expression
     | 'new' 'int' '[' expression ']' #NewIntArray
     | 'new' ID '(' ')' #NewObject
     | '(' expression ')' #Parenthesis
-    | INT #IntLiteral
-    | 'true' #BoolLiteral
-    | 'false' #BoolLiteral
+    | val=INT #IntLiteral
+    | val='true' #BoolLiteral
+    | val='false' #BoolLiteral
     | name = ID #Id
     | 'this' #This
     ;
