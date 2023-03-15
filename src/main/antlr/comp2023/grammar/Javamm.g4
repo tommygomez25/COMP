@@ -4,8 +4,8 @@ grammar Javamm;
     package pt.up.fe.comp2023;
 }
 
-ID : [a-zA-Z_][a-zA-Z_0-9]* ;
-INT : [0-9]+;
+ID : [a-zA-Z$][a-zA-Z$0-9]*;
+INT : [0]|[1-9][0-9]*;
 WS : [ \t\r\n]+ -> skip;
 COMMENT : ('/*' .*? '*/'| '//' ~[\r\n]*) -> skip;
 
@@ -44,20 +44,20 @@ statement :
       ;
 
 expression
-    : '!' expression #Not
+    : '(' expression ')' #Parenthesis
+    | expression '[' expression ']' #ArrayAccess
+    | expression '.' 'length' #ArrayLength
+    | '!' expression #Not
+    | 'new' 'int' '[' expression ']' #NewIntArray
+    | 'new' ID '(' ')' #NewObject
     | expression op=('*'|'/') expression #BinaryOp
     | expression op=('+'|'-') expression #BinaryOp
     | expression op='<' expression #BinaryOp
     | expression op='&&' expression #BinaryOp
-    | expression '[' expression ']' #ArrayAccess
-    | expression '.' 'length' #ArrayLength
-    | expression '.' ID '(' ( expression ( ',' expression )* )? ')' #MethodCall
-    | 'new' 'int' '[' expression ']' #NewIntArray
-    | 'new' ID '(' ')' #NewObject
-    | '(' expression ')' #Parenthesis
-    | INT #IntLiteral
-    | 'true' #BoolLiteral
-    | 'false' #BoolLiteral
+    | expression '.' caller=ID '(' ( expression ( ',' expression )* )? ')' #MethodCall
+    | var=INT #IntLiteral
+    | var='true' #BoolLiteral
+    | var='false' #BoolLiteral
     | name = ID #Id
     | 'this' #This
     ;
