@@ -4,8 +4,8 @@ grammar Javamm;
     package pt.up.fe.comp2023;
 }
 
-ID : [a-zA-Z_][a-zA-Z_0-9]* ;
-INT : [0-9]+;
+ID : [a-zA-Z$_][a-zA-Z$0-9_]*;
+INT : [0]|[1-9][0-9]*;
 WS : [ \t\r\n]+ -> skip;
 COMMENT : ('/*' .*? '*/'| '//' ~[\r\n]*) -> skip;
 
