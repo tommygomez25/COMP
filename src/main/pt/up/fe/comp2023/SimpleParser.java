@@ -53,7 +53,7 @@ public class SimpleParser implements JmmParser {
             //are errors, you must create a Report indicating the number of errors. You will have to change the
             //code in the method parse of the class SimpleParser to implement this.
             if(parser.getNumberOfSyntaxErrors() > 0){
-                return JmmParserResult.newError(new Report(ReportType.WARNING, Stage.SYNTATIC, -1,
+                return JmmParserResult.newError(new Report(ReportType.ERROR, Stage.SYNTATIC, -1,
                         "There were " + parser.getNumberOfSyntaxErrors() + " syntax errors during parsing, terminating"));
             }
 
@@ -62,7 +62,7 @@ public class SimpleParser implements JmmParser {
                     // If there were no errors and a root node was generated, create a JmmParserResult with the node
                     .map(root -> new JmmParserResult(root, Collections.emptyList(), config))
                     // If there were errors, create an error JmmParserResult without root node
-                    .orElseGet(() -> JmmParserResult.newError(new Report(ReportType.WARNING, Stage.SYNTATIC, -1,
+                    .orElseGet(() -> JmmParserResult.newError(new Report(ReportType.ERROR, Stage.SYNTATIC, -1,
                             "There were " + parser.getNumberOfSyntaxErrors() + " syntax errors during parsing, terminating")));
 
         } catch (Exception e) {

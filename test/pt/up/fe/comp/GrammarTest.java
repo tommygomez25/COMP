@@ -30,6 +30,11 @@ public class GrammarTest {
     public void testStringDeclaration(){ TestUtils.parseVerbose("String a;", VAR_DECLARATION);}
 
     @Test
+    public void testInvalidIntDeclaration() {
+        TestUtils.parseVerbose("int 1.0;", VAR_DECLARATION);
+    }
+
+    @Test
     public void testImportSingle() {
         TestUtils.parseVerbose("import bar;", IMPORT);
     }
