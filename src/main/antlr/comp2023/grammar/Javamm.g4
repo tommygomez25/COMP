@@ -44,20 +44,20 @@ statement :
       ;
 
 expression
-    : '!' expression #Not
+    : '(' expression ')' #Parenthesis
+    | expression '[' expression ']' #ArrayAccess
+    | expression '.' 'length' #ArrayLength
+    | '!' expression #Not
+    | 'new' 'int' '[' expression ']' #NewIntArray
+    | 'new' ID '(' ')' #NewObject
     | expression op=('*'|'/') expression #BinaryOp
     | expression op=('+'|'-') expression #BinaryOp
     | expression op='<' expression #BinaryOp
     | expression op='&&' expression #BinaryOp
-    | expression '[' expression ']' #ArrayAccess
-    | expression '.' 'length' #ArrayLength
-    | expression '.' ID '(' ( expression ( ',' expression )* )? ')' #MethodCall
-    | 'new' 'int' '[' expression ']' #NewIntArray
-    | 'new' ID '(' ')' #NewObject
-    | '(' expression ')' #Parenthesis
-    | val=INT #IntLiteral
-    | val='true' #BoolLiteral
-    | val='false' #BoolLiteral
+    | expression '.' caller=ID '(' ( expression ( ',' expression )* )? ')' #MethodCall
+    | var=INT #IntLiteral
+    | var='true' #BoolLiteral
+    | var='false' #BoolLiteral
     | name = ID #Id
     | 'this' #This
     ;
