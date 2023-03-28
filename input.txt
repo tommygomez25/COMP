@@ -1,11 +1,9 @@
-import foo.bar.a;
-import foo.bar.b;
 
-class HelloWorld{
+class helloWorld{
     int field1;
     boolean field2;
     String field3;
-    int[] field4
+    int[] field4;
 
     public static void main(String[] args) {
             String a;
