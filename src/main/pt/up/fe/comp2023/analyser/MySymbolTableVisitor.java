@@ -68,14 +68,16 @@ public class MySymbolTableVisitor extends AJmmVisitor<MySymbolTable, List<Report
         currentScope = "CLASS";
 
         for(JmmNode child: jmmNode.getChildren()){
-            if(child.getKind().equals("Field")){
+            if(child.getKind().equals("Field")) {
                 String fieldName = child.get("fieldName");
                 boolean isArray = child.getChildren().get(0).get("isArray").equals("true");
                 String t = child.getChildren().get(0).get("typeName");
                 Type type = new Type(t, isArray);
-                if (symbolTable.containsFieldInClass(fieldName,className))
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"),Integer.parseInt("-1"),
+                if (symbolTable.containsFieldInClass(fieldName, className)) {
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), Integer.parseInt("-1"),
                             "Field " + fieldName + " already exists in class " + className));
+                return reports;
+                }
                 else
                     symbolTable.addField(new Symbol(type, fieldName));
 
@@ -117,9 +119,11 @@ public class MySymbolTableVisitor extends AJmmVisitor<MySymbolTable, List<Report
 
                     Type typeObject = new Type(type, isArray);
 
-                    if (parameters.stream().anyMatch(symbol -> symbol.getName().equals(fieldName)))
+                    if (parameters.stream().anyMatch(symbol -> symbol.getName().equals(fieldName))){
                         reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"),Integer.parseInt("-1"),
                                 "Field " + methodParameters.get(i-1) + " already exists in method " + methodName));
+                        return reports;
+                    }
                     else
                         parameters.add(new Symbol(typeObject, methodParameters.get(i - 1)));
 
@@ -135,9 +139,11 @@ public class MySymbolTableVisitor extends AJmmVisitor<MySymbolTable, List<Report
                     Type typeObject = new Type(type, isArray);
                     Symbol symbol = new Symbol(typeObject, varName);
 
-                    if (localVariables.stream().anyMatch(s -> s.getName().equals(varName)))
+                    if (localVariables.stream().anyMatch(s -> s.getName().equals(varName))){
                         reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"),Integer.parseInt("-1"),
                                 "Variable " + varName + " already exists in method " + methodName));
+                        return reports;
+                    }
                     else
                         localVariables.add(symbol);
                 }
@@ -160,17 +166,21 @@ public class MySymbolTableVisitor extends AJmmVisitor<MySymbolTable, List<Report
                         String type = child.getChildren().get(0).get("typeName");
                         Type typeObject = new Type(type, isArray);
                         Symbol symbol = new Symbol(typeObject, varName);
-                        if (localVariables.stream().anyMatch(s -> s.getName().equals(varName)))
+                        if (localVariables.stream().anyMatch(s -> s.getName().equals(varName))){
                             reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"),Integer.parseInt("-1"),
                                     "Variable " + varName + " already exists in method " + methodName));
+                            return reports;
+                        }
                         else
                             localVariables.add(symbol);
                     }
 
             }
-            if (symbolTable.containsMethod(methodName, returnTypes.get(0), parameters))
+            if (symbolTable.containsMethod(methodName, returnTypes.get(0), parameters)){
                 reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"),Integer.parseInt("-1"),
                         "Method " + methodName + " already exists"));
+                return reports;
+            }
             else {
                 symbolTable.addMethod(methodName, returnTypes.get(0), parameters,localVariables);
             }

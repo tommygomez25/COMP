@@ -54,7 +54,7 @@ public class Launcher {
 
         // Instantiate JmmAnalyser
         JmmAnalysisImpl analyser = new JmmAnalysisImpl();
-        JmmSemanticsResult semanticsResult = analyser.semanticAnalysis(parserResult);
+        analyser.semanticAnalysis(parserResult);
 
     }
 
