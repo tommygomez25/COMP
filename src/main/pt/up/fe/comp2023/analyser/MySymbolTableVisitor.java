@@ -153,20 +153,20 @@ public class MySymbolTableVisitor extends AJmmVisitor<MySymbolTable, List<Report
             returnTypes.add(new Type("void", false));
 
             for (JmmNode child: jmmNode.getChildren()) {
-                for (JmmNode grandChild: child.getChildren()) {
-                    if (grandChild.getKind().equals("VarDeclaration")) {
-                        String varName = grandChild.get("fieldName");
-                        boolean isArray = grandChild.getChildren().get(0).get("isArray").equals("true");
-                        String type = grandChild.getChildren().get(0).get("typeName");
+
+                    if (child.getKind().equals("Field")) {
+                        String varName = child.get("fieldName");
+                        boolean isArray = child.getChildren().get(0).get("isArray").equals("true");
+                        String type = child.getChildren().get(0).get("typeName");
                         Type typeObject = new Type(type, isArray);
                         Symbol symbol = new Symbol(typeObject, varName);
-                        if (symbolTable.containsSymbolInMethod(varName, methodName))
+                        if (localVariables.stream().anyMatch(s -> s.getName().equals(varName)))
                             reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"),Integer.parseInt("-1"),
                                     "Variable " + varName + " already exists in method " + methodName));
                         else
                             localVariables.add(symbol);
                     }
-                }
+
             }
             if (symbolTable.containsMethod(methodName, returnTypes.get(0), parameters))
                 reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"),Integer.parseInt("-1"),
