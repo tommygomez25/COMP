@@ -6,8 +6,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import pt.up.fe.comp.TestUtils;
-import pt.up.fe.comp.jmm.analysis.table.Symbol;
+import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
+import pt.up.fe.comp2023.analyser.JmmAnalysisImpl;
 import pt.up.fe.specs.util.SpecsIo;
 import pt.up.fe.specs.util.SpecsLogs;
 import pt.up.fe.specs.util.SpecsSystem;
@@ -51,26 +52,9 @@ public class Launcher {
         // Check if there are parsing errors
         TestUtils.noErrors(parserResult.getReports());
 
-        MySymbolTable mySymbolTable = new MySymbolTable();
-        ClassVisitor classVisitor = new ClassVisitor();
-        classVisitor.visit(parserResult.getRootNode());
-        mySymbolTable.setClassName(classVisitor.getClassName());
-        mySymbolTable.setSuperName(classVisitor.getSuperClassName());
-        mySymbolTable.setFields(classVisitor.getFields());
-
-        ImportVisitor importVisitor = new ImportVisitor();
-        importVisitor.visit(parserResult.getRootNode());
-        mySymbolTable.setImports(importVisitor.getImports());
-
-        MethodVisitor methodVisitor = new MethodVisitor();
-        methodVisitor.visit(parserResult.getRootNode());
-        mySymbolTable.setMethods(methodVisitor.getMethods());
-        mySymbolTable.setMethodsReturnTypes(methodVisitor.getMethodsReturnTypes());
-        mySymbolTable.setMethodsParameters(methodVisitor.getMethodsParams());
-        mySymbolTable.setMethodsLocalVariables(methodVisitor.getMethodsLocals());
-
-        System.out.println("Symbol table: \n");
-        System.out.println(mySymbolTable.print());
+        // Instantiate JmmAnalyser
+        JmmAnalysisImpl analyser = new JmmAnalysisImpl();
+        JmmSemanticsResult semanticsResult = analyser.semanticAnalysis(parserResult);
 
     }
 
