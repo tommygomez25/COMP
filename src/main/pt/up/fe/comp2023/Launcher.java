@@ -56,6 +56,7 @@ public class Launcher {
         JmmAnalysisImpl analyser = new JmmAnalysisImpl();
         analyser.semanticAnalysis(parserResult);
 
+
     }
 
     private static Map<String, String> parseArgs(String[] args) {

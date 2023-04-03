@@ -167,28 +167,6 @@ class MySymbolTable implements SymbolTable {
         fields.add(symbol);
     }
 
-    public boolean hasField(String name) {
-        for (Symbol field : fields) {
-            if (field.getName().equals(name)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public boolean hasLocalVariable(String name, String methodSignature) {
-        for (Symbol localVariable : methodLocalVariables.get(methodSignature)) {
-            if (localVariable.getName().equals(name)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void addLocalVariable(String methodSignature, Symbol symbol) {
-        methodLocalVariables.get(methodSignature).add(symbol);
-    }
-
     public boolean containsFieldInClass(String name, String className) {
         for (Symbol field : fields) {
             if (field.getName().equals(name)) {
@@ -200,14 +178,6 @@ class MySymbolTable implements SymbolTable {
         return false;
     }
 
-    public boolean containsSymbolInMethod(String varName, String methodName) {
-        for (Symbol localVariable : methodLocalVariables.get(methodName)) {
-            if (localVariable.getName().equals(varName)) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     public boolean containsMethod(String methodName,Type returnType, List<Symbol> parameters) {
 for (String method : methods) {
@@ -220,6 +190,70 @@ for (String method : methods) {
             }
         }
         return false;
+    }
+
+    public boolean isVarDeclared(String varName) {
+        for (Symbol field : fields) {
+            if (field.getName().equals(varName)) {
+                return true;
+            }
+        }
+        for (String method : methods) {
+            for (Symbol parameter : methodParameters.get(method)) {
+                if (parameter.getName().equals(varName)) {
+                    return true;
+                }
+            }
+            for (Symbol localVariable : methodLocalVariables.get(method)) {
+                if (localVariable.getName().equals(varName)) {
+                    return true;
+                }
+            }
+        }
+
+        // check if varName is in the imports
+        for (String imp : imports) {
+            if (imp.endsWith(varName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isMathExpression(String kind) {
+        return kind.equals("BinaryOp");
+    }
+
+    public boolean isBooleanExpression(String kind) {
+        return kind.equals("BooleanOp");
+    }
+
+    public Symbol findField(String name){
+        for(Symbol field : fields){
+            if(field.getName().equals(name)){
+                return field;
+            }
+        }
+
+        // iterate method local variables
+        for(String method : methods){
+            for(Symbol localVariable : methodLocalVariables.get(method)){
+                if(localVariable.getName().equals(name)){
+                    return localVariable;
+                }
+            }
+        }
+
+        // iterate method parameters
+        for(String method : methods){
+            for(Symbol parameter : methodParameters.get(method)){
+                if(parameter.getName().equals(name)){
+                    return parameter;
+                }
+            }
+        }
+
+        return null;
     }
 
 }

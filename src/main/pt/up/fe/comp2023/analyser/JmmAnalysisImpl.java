@@ -37,11 +37,19 @@ public class JmmAnalysisImpl implements JmmAnalysis {
             JmmNode rootNode = jmmParserResult.getRootNode();
             MySymbolTable mySymbolTable = new MySymbolTable();
             List<Report> symbolTableReports = new MySymbolTableVisitor().visit(rootNode, mySymbolTable);
-            for (Report report : symbolTableReports) {
-                System.out.println(report.toString());
-            }
 
-            return new JmmSemanticsResult(jmmParserResult, mySymbolTable, Collections.emptyList());
+            var methodUndeclaredCheck = new UndeclaredMethodCheck(mySymbolTable,symbolTableReports);
+            methodUndeclaredCheck.visit(rootNode, null);
+
+            var varNotDeclaredCheck = new VarNotDeclaredCheck(mySymbolTable,symbolTableReports);
+            varNotDeclaredCheck.visit(rootNode, null);
+
+            var returnTypeCheck = new ReturnTypeCheck(mySymbolTable,symbolTableReports);
+            returnTypeCheck.visit(rootNode, null);
+
+            System.out.println(symbolTableReports);
+
+            return new JmmSemanticsResult(jmmParserResult, mySymbolTable, symbolTableReports);
         }
     }
 }

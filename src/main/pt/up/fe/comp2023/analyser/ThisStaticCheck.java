@@ -14,6 +14,7 @@ public class ThisStaticCheck extends PreorderJmmVisitor<Integer, Integer>{
         this.reports = reports;
         this.symbolTable = symbolTable;
         buildVisitor();
+        setDefaultVisit((node, arg) -> 0);
     }
 
     public Integer visitField(JmmNode node, Integer arg) {

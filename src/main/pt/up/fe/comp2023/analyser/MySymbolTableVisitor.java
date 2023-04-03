@@ -33,7 +33,6 @@ public class MySymbolTableVisitor extends AJmmVisitor<MySymbolTable, List<Report
 
         for (JmmNode child : jmmNode.getChildren()) {
             visitAndReduce(child, symbolTable, reports);
-            //visit(child, symbolTable);
         }
         return reports;
     }

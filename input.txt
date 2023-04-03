@@ -1,25 +1,20 @@
-import foo.bar.a;
-import foo.bar.b;
-
-class HelloWorld{
-    int field1;
-    boolean field2;
-    String field3;
-    int[] field4;
+class IncompatibleReturn {
 
     public static void main(String[] args) {
-            String a;
-            a = 2 * (1 + 2);
+
     }
 
-    public int newMethod(int a, String b, Object c) {
-        int a;
-        int a;
-        int[] d;
-        String f;
-        a = 2 * (1 + 2);
-        return a;
+    public int foo(int a) {
+        return a + 1;
     }
 
+    public boolean bar() {
+        IncompatibleReturn a;
+        int b;
 
+        a = new IncompatibleReturn();
+        b = 0;
+
+        return a.foo(b);
+    }
 }

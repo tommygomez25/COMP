@@ -26,6 +26,12 @@ public class SemanticAnalysisTest {
     }
 
     @Test
+    public void classImported() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp2/semanticanalysis/ClassImported.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
     public void intPlusObject() {
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp2/semanticanalysis/IntPlusObject.jmm"));
         TestUtils.mustFail(result);
