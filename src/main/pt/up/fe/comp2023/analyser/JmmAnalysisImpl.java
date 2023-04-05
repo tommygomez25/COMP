@@ -50,6 +50,12 @@ public class JmmAnalysisImpl implements JmmAnalysis {
             var argTypeCheck = new ArgTypeCheck(mySymbolTable,symbolTableReports);
             argTypeCheck.visit(rootNode, null);
 
+            var thisStaticCheck = new ThisStaticCheck(mySymbolTable,symbolTableReports);
+            thisStaticCheck.visit(rootNode, null);
+
+            var arrayIndexNotIntCheck = new ArrayIndexNotIntCheck(mySymbolTable,symbolTableReports);
+            arrayIndexNotIntCheck.visit(rootNode, null);
+
             System.out.println(symbolTableReports);
 
             return new JmmSemanticsResult(jmmParserResult, mySymbolTable, symbolTableReports);

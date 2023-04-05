@@ -48,7 +48,7 @@ statement :
 
 expression
     : '(' expression ')' #Parenthesis
-    | expression '[' expression ']' #ArrayAccess
+    | expression access #ArrayAccess
     | expression '.' 'length' #ArrayLength
     | '!' expression #Not
     | 'new' 'int' '[' expression ']' #NewIntArray
@@ -68,3 +68,5 @@ expression
 argum:
     '(' ( expression ( ',' expression )* )? ')' #Arguments;
 
+access:
+    '[' expression ']' #Accessors;
