@@ -47,6 +47,9 @@ public class JmmAnalysisImpl implements JmmAnalysis {
             var returnTypeCheck = new ReturnTypeCheck(mySymbolTable,symbolTableReports);
             returnTypeCheck.visit(rootNode, null);
 
+            var argTypeCheck = new ArgTypeCheck(mySymbolTable,symbolTableReports);
+            argTypeCheck.visit(rootNode, null);
+
             System.out.println(symbolTableReports);
 
             return new JmmSemanticsResult(jmmParserResult, mySymbolTable, symbolTableReports);

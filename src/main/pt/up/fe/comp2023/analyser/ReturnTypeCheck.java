@@ -56,15 +56,17 @@ public class ReturnTypeCheck extends PreorderJmmVisitor<Integer,Integer> {
                // if Kind is MethodCall
                else if (child.getChildren().get(0).getKind().equals("MethodCall")) {
                      String methodCallName = child.getChildren().get(0).get("caller");
-                     if (!symbolTable.getMethods().contains(methodCallName)) {
-                         reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " is not declared"));
-
+                     if (symbolTable.getSuper() != null) {return 1;}
+                     if (!symbolTable.getImports().isEmpty()) {return 1;}
+                     if (symbolTable.getMethods().contains(methodCallName)) {
+                         String methodCallReturnType = symbolTable.getReturnType(methodCallName).getName();
+                         if (!returnType.equals(methodCallReturnType)) {
+                             reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should return " + returnType + " but returns " + methodCallReturnType));
+                             return 0 ;
+                         }
                      }
-                     String methodCallReturnType = symbolTable.getReturnType(methodCallName).getName();
-                     if (!returnType.equals(methodCallReturnType)) {
-                          reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should return " + returnType));
+                     // if it is undeclared it is already handled by class UndeclaredMethodCheck
 
-                     }
                 }
 
                // if Kinds is Not
@@ -121,14 +123,21 @@ public class ReturnTypeCheck extends PreorderJmmVisitor<Integer,Integer> {
                 else if (child.getChildren().get(0).getKind().equals("Id")) {
                     var id = child.getChildren().get(0).get("name");
                     var idSymbol = symbolTable.findField(id);
-                    if (idSymbol == null) {reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Variable " + id + " is not declared"));}
+                    if (idSymbol == null) {
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Return variable " + id + " is not declared"));
+                        return 0;
+                    }
                     var idType = idSymbol.getType().getName();
                     if (!returnType.equals(idType)) {
                         reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should return " + returnType));
                     }
 
                 }
-
+                else if (child.getChildren().get(0).getKind().equals("This")) {
+                    if (!returnType.equals(symbolTable.getClassName())) {
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should return " + returnType));
+                    }
+                }
                 // falta parenteses
 
             }

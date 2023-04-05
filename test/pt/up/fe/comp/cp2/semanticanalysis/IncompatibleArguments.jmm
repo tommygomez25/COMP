@@ -15,6 +15,6 @@ class IncompatibleArguments {
         a = new IncompatibleArguments();
         b = true;
 
-        return a.foo(b);
+        return a.foo(this);
     }
 }

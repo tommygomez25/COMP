@@ -52,16 +52,19 @@ expression
     | expression '.' 'length' #ArrayLength
     | '!' expression #Not
     | 'new' 'int' '[' expression ']' #NewIntArray
-    | 'new' ID '(' ')' #NewObject
+    | 'new' name= ID '(' ')' #NewObject
     | expression op=('*'|'/') expression #BinaryOp
     | expression op=('+'|'-') expression #BinaryOp
     | expression op='<' expression #BooleanOp
     | expression op='&&' expression #BooleanOp
-    | expression '.' caller=ID '(' ( expression ( ',' expression )* )? ')' #MethodCall
+    | expression '.' caller=ID argum #MethodCall
     | var=INT #IntLiteral
     | var='true' #BoolLiteral
     | var='false' #BoolLiteral
     | name = ID #Id
     | 'this' #This
     ;
+
+argum:
+    '(' ( expression ( ',' expression )* )? ')' #Arguments;
 

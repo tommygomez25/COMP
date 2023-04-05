@@ -1,4 +1,4 @@
-class IncompatibleReturn {
+class IncompatibleArguments {
 
     public static void main(String[] args) {
 
@@ -8,13 +8,13 @@ class IncompatibleReturn {
         return a + 1;
     }
 
-    public boolean bar() {
-        IncompatibleReturn a;
-        int b;
+    public int bar() {
+        IncompatibleArguments a;
+        boolean b;
 
-        a = new IncompatibleReturn();
-        b = 0;
+        a = new IncompatibleArguments();
+        b = true;
 
-        return a.foo(b);
+        return this;
     }
 }

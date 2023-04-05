@@ -256,5 +256,27 @@ for (String method : methods) {
         return null;
     }
 
+    public Type getVarReturnType(String varName) {
+        for (Symbol field : fields) {
+            if (field.getName().equals(varName)) {
+                return field.getType();
+            }
+        }
+        for (String method : methods) {
+            for (Symbol parameter : methodParameters.get(method)) {
+                if (parameter.getName().equals(varName)) {
+                    return parameter.getType();
+                }
+            }
+            for (Symbol localVariable : methodLocalVariables.get(method)) {
+                if (localVariable.getName().equals(varName)) {
+                    return localVariable.getType();
+                }
+            }
+        }
+
+        return null;
+    }
+
 }
 
