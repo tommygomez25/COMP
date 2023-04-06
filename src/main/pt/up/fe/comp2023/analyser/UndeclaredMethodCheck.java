@@ -36,8 +36,14 @@ public class UndeclaredMethodCheck extends PreorderJmmVisitor<Integer, Integer> 
         if (symbolTable.getMethods().contains(methodName)) {
             return 1;
         }
-        if (symbolTable.getSuper() != null) {
-            return 1;
+        if (symbolTable.getSuper() != null ) {
+            if (!symbolTable.isClassImported(symbolTable.getSuper())) {
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), Integer.parseInt("-1"),
+                        "Method " + methodName + " is not declared" + " and class " + symbolTable.getSuper() + " is not imported"));
+            }
+            else {
+                return 1;
+            }
         }
 
         if (!symbolTable.getImports().isEmpty()) {

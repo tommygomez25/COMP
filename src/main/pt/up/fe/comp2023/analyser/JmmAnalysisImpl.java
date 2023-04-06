@@ -56,6 +56,9 @@ public class JmmAnalysisImpl implements JmmAnalysis {
             var arrayIndexNotIntCheck = new ArrayIndexNotIntCheck(mySymbolTable,symbolTableReports);
             arrayIndexNotIntCheck.visit(rootNode, null);
 
+            var arrayAccessCheck = new ArrayAccessCheck(mySymbolTable,symbolTableReports);
+            arrayAccessCheck.visit(rootNode, null);
+
             System.out.println(symbolTableReports);
 
             return new JmmSemanticsResult(jmmParserResult, mySymbolTable, symbolTableReports);

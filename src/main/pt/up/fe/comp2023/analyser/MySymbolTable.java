@@ -180,7 +180,7 @@ class MySymbolTable implements SymbolTable {
 
 
     public boolean containsMethod(String methodName,Type returnType, List<Symbol> parameters) {
-for (String method : methods) {
+        for (String method : methods) {
             if (method.equals(methodName)) {
                 if (methodReturnType.get(method).equals(returnType)) {
                     if (methodParameters.get(method).equals(parameters)) {
@@ -276,6 +276,15 @@ for (String method : methods) {
         }
 
         return null;
+    }
+
+    public boolean isClassImported(String className){
+        for(String imp : imports){
+            if(imp.endsWith(className)){
+                return true;
+            }
+        }
+        return false;
     }
 
 }
