@@ -1,13 +1,16 @@
-class ArrayAccessOnInt {
+import A;
+import M;
+
+class CallToMethodAssumedInImport extends A {
 
     public static void main(String[] args) {
 
     }
 
     public int foo() {
-        int a;
-        a = 0;
+        bool a;
+        a = M.bar();
 
-        return ((1+2) + new int[a])[10];
+        return 0;
     }
 }
