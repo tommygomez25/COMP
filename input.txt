@@ -1,16 +1,12 @@
-import A;
-import M;
+import bar.foo.A;
 
-class CallToMethodAssumedInImport extends A {
+class ClassNotImported {
 
     public static void main(String[] args) {
 
     }
 
     public int foo() {
-        bool a;
-        a = M.bar();
-
-        return 0;
+        return A.bar();
     }
 }
