@@ -1,11 +1,29 @@
 package pt.up.fe.comp2023;
 
-import pt.up.fe.comp.jmm.ollir.OllirResult;
+import org.specs.comp.ollir.ClassUnit;
 
-import java.util.Map;
+public class OllirToJasmin {
 
-public class OllirToJasmin extends OllirResult {
-    public OllirToJasmin(String ollirCode, Map<String, String> config) {
-        super(ollirCode, config);
+    private final ClassUnit classUnit;
+
+    public OllirToJasmin(ClassUnit classUnit) {
+        this.classUnit = classUnit;
+        this.classUnit.buildVarTables();
+    }
+
+    public String createJasmin(){
+        StringBuilder jasminCode = new StringBuilder();
+
+        jasminCode.append(".class public ").append(classUnit.getClassName()).append("\n");
+
+        String superClass = classUnit.getSuperClass();
+        if(superClass != null){
+            jasminCode.append(".super ").append(superClass).append("\n\n");
+        }
+        else{
+            jasminCode.append(".super java/lang/Object \n\n");
+        }
+
+        return jasminCode.toString();
     }
 }
