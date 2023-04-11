@@ -9,6 +9,7 @@ import pt.up.fe.comp.jmm.report.Stage;
 
 import java.util.List;
 
+
 public class ArrayAccessCheck extends PreorderJmmVisitor<Integer, Integer> {
     private final MySymbolTable symbolTable;
     private final List<Report> reports;
@@ -26,52 +27,20 @@ public class ArrayAccessCheck extends PreorderJmmVisitor<Integer, Integer> {
     }
 
     public Integer visitArrayAccess(JmmNode jmmNode, Integer arg) {
-        System.out.println(jmmNode.getAttributes());
+
         JmmNode array = jmmNode.getChildren().get(0);
         JmmNode accessor = jmmNode.getChildren().get(1).getChildren().get(0);
-        boolean isMathExpression = symbolTable.isMathExpression(accessor.getKind());
-        boolean isBooleanExpression = symbolTable.isBooleanExpression(accessor.getKind());
 
-        if (!array.getKind().equals("Id") && !array.getKind().equals("NewIntArray")) {
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Array access on non-array"));
+        Type operandType = AnalysisUtils.getType(array, symbolTable);
+        Type accessorType = AnalysisUtils.getType(accessor, symbolTable);
+
+        if (!operandType.isArray()) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Cannot access array element of non-array type"));
         }
 
-        else {
-            Type arrayType = symbolTable.getVarType(array.get("name"));
-            if (arrayType == null) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Array access on non-array"));
-            }
-            else if (!arrayType.isArray()) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Array access on non-array"));
-            }
-
+        if (!accessorType.getName().equals("int")) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Array accessor must be of type int"));
         }
-
-        if (isBooleanExpression || accessor.getKind().equals("BoolLiteral") ||
-            accessor.getKind().equals("NewIntArray") || accessor.getKind().equals("NewObject") || accessor.getKind().equals("Not")) {
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Array accessor must be an integer"));
-        }
-        else if (isMathExpression || accessor.getKind().equals("IntLiteral") || accessor.getKind().equals("ArrayLength")) {
-            return 1;
-        }
-
-        else if (accessor.getKind().equals("Id")) {
-            String variableType = symbolTable.getVarType(accessor.get("name")).getName();
-            if (!variableType.equals("int")) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Array accessor must be an integer"));
-            }
-        }
-        else if (accessor.getKind().equals("MethodCall")) {
-            String methodReturnType = symbolTable.getReturnType(accessor.get("methodName")).getName();
-            if (!methodReturnType.equals("int")) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Array accessor must be an integer"));
-            }
-        }
-        else if (accessor.getKind().equals("ArrayAccess")) {
-            visit(accessor, arg);
-        }
-
-
 
         return 1;
     }
