@@ -1,5 +1,6 @@
 package pt.up.fe.comp2023.analyser;
 
+import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.PreorderJmmVisitor;
 import pt.up.fe.comp.jmm.report.Report;
@@ -41,7 +42,7 @@ public class ReturnTypeCheck extends PreorderJmmVisitor<Integer,Integer> {
                 // if Kind is BooleanOp
                if (symbolTable.isBooleanExpression(child.getChildren().get(0).getKind())) {
                    if (!returnType.equals("boolean")) {
-                       reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should return " + returnType));
+                       reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Method " + methodName + " should return " + returnType));
 
                    }
                }
@@ -49,7 +50,7 @@ public class ReturnTypeCheck extends PreorderJmmVisitor<Integer,Integer> {
                // if Kind is BinaryOp
                else if (symbolTable.isMathExpression(child.getChildren().get(0).getKind())) {
                    if (!returnType.equals("int")) {
-                       reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should return " + returnType));
+                       reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Method " + methodName + " should return " + returnType));
 
                    }
                }
@@ -62,7 +63,7 @@ public class ReturnTypeCheck extends PreorderJmmVisitor<Integer,Integer> {
                      if (symbolTable.getMethods().contains(methodCallName)) {
                          String methodCallReturnType = symbolTable.getReturnType(methodCallName).getName();
                          if (!returnType.equals(methodCallReturnType)) {
-                             reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should return " + returnType + " but returns " + methodCallReturnType));
+                             reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Method " + methodName + " should return " + returnType + " but returns " + methodCallReturnType));
                              return 0 ;
                          }
                      }
@@ -73,42 +74,42 @@ public class ReturnTypeCheck extends PreorderJmmVisitor<Integer,Integer> {
                // if Kinds is Not
                 else if (child.getChildren().get(0).getKind().equals("Not")) {
                      if (!returnType.equals("boolean")) {
-                          reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should return " + returnType));
+                          reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Method " + methodName + " should return " + returnType));
                      }
                 }
 
                 // if Kind is IntLiteral
                 else if (child.getChildren().get(0).getKind().equals("IntLiteral")) {
                     if (!returnType.equals("int")) {
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should return " + returnType));
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Method " + methodName + " should return " + returnType));
                     }
                 }
 
                 // if kind is BooleanLiteral
                 else if (child.getChildren().get(0).getKind().equals("BoolLiteral")) {
                     if (!returnType.equals("boolean")) {
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should return " + returnType));
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Method " + methodName + " should return " + returnType));
                     }
                 }
 
                 // if kind is ArrayAccess
                 else if (child.getChildren().get(0).getKind().equals("ArrayAccess")) {
                     if (!returnType.equals("int")) {
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should return " + returnType));
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Method " + methodName + " should return " + returnType));
                     }
                 }
 
                 // if kind is ArrayLength
                 else if (child.getChildren().get(0).getKind().equals("ArrayLength")) {
                     if (!returnType.equals("int")) {
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should return " + returnType));
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Method " + methodName + " should return " + returnType));
                     }
                 }
 
                 // if kind is NewIntArray
                 else if (child.getChildren().get(0).getKind().equals("NewIntArray")) {
                     if (!isArray) {
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should return " + returnType));
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Method " + methodName + " should return " + returnType));
                     }
                 }
 
@@ -116,7 +117,7 @@ public class ReturnTypeCheck extends PreorderJmmVisitor<Integer,Integer> {
                 else if (child.getChildren().get(0).getKind().equals("NewObject")) {
                     var id = child.getChildren().get(0).get("name");
                     if (!returnType.equals(id)) {
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method" + methodName + " should return " + returnType));
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Method" + methodName + " should return " + returnType));
                     }
                 }
 
@@ -125,25 +126,34 @@ public class ReturnTypeCheck extends PreorderJmmVisitor<Integer,Integer> {
                     var id = child.getChildren().get(0).get("name");
                     var idSymbol = symbolTable.findField(id);
                     if (idSymbol == null) {
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Return variable " + id + " is not declared"));
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Return variable " + id + " is not declared"));
                         return 0;
                     }
                     var idType = idSymbol.getType().getName();
                     var isIdArray = idSymbol.getType().isArray();
                     if (isArray && !isIdArray) {
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should return " + returnType));
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Method " + methodName + " should return " + returnType));
                     }
                     if (!returnType.equals(idType) && !isArray && !isIdArray) {
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should return " + returnType));
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Method " + methodName + " should return " + returnType));
                     }
 
                 }
                 else if (child.getChildren().get(0).getKind().equals("This")) {
                     if (!returnType.equals(symbolTable.getClassName())) {
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should return " + returnType));
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Method " + methodName + " should return " + returnType));
                     }
                 }
-                // falta parentesis
+                else if (child.getChildren().get(0).getKind().equals("Parenthesis")) {
+                    Type type = AnalysisUtils.getType(child.getChildren().get(0),symbolTable);
+                    boolean isVarArray = type.isArray();
+                    if (isArray && !isVarArray) {
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Method " + methodName + " should return " + returnType));
+                    }
+                    if (!returnType.equals(type.getName()) && ((!isArray && !isVarArray) || (isArray && isVarArray))) {
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Method " + methodName + " should return " + returnType));
+                    }
+                }
             }
         }
 

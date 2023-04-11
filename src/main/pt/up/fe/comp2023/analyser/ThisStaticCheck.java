@@ -33,6 +33,7 @@ public class ThisStaticCheck extends PreorderJmmVisitor<Integer, Integer>{
                 if (child.getAncestor("Method").isPresent()) {
                     if (child.getAncestor("Method").get().get("methodName").equals("main")) {
                         reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Cannot use this in main method"));
+                        return 0;
                     }
                 }
                 if (varType != null) {

@@ -11,37 +11,34 @@ public class AnalysisUtils {
 
         String kind = node.getKind();
         switch (kind) {
-            case "Parenthesis":
+            case "Parenthesis", "ArrayAccess" -> {
                 return getType(node.getChildren().get(0), symbolTable);
-            case "ArrayAccess":
-                return getType(node.getChildren().get(0), symbolTable);
-            case "ArrayLength":
-                return new Type("int",false);
-            case "Not":
-                return new Type("boolean",false);
-            case "NewIntArray":
-                return new Type("int",true);
-            case "NewObject":
-                return new Type(node.get("name"),false);
-            case "BinaryOp":
-                return new Type("int",false);
-            case "BooleanOp":
-                return new Type("boolean",false);
-            case "MethodCall":
+            }
+            case "ArrayLength", "BinaryOp", "IntLiteral" -> {
+                return new Type("int", false);
+            }
+            case "Not", "BoolLiteral", "BooleanOp" -> {
+                return new Type("boolean", false);
+            }
+            case "NewIntArray" -> {
+                return new Type("int", true);
+            }
+            case "NewObject" -> {
+                return new Type(node.get("name"), false);
+            }
+            case "MethodCall" -> {
                 String methodName = node.get("caller");
                 return (symbolTable.getReturnType(methodName));
-            case "IntLiteral":
-                return new Type("int",false);
-            case "BoolLiteral":
-                return new Type("boolean",false);
-            case "Id":
+            }
+            case "Id" -> {
                 String varName = node.get("name");
                 Symbol varSymbol = symbolTable.findField(varName);
                 return varSymbol.getType();
-            case "This":
-                return new Type(symbolTable.getClassName(),false);
-            default:
-                throw new RuntimeException("Unknown kind: " + kind);
+            }
+            case "This" -> {
+                return new Type(symbolTable.getClassName(), false);
+            }
+            default -> throw new RuntimeException("Unknown kind: " + kind);
         }
 
     }

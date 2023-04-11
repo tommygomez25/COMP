@@ -38,87 +38,84 @@ public class ArgTypeCheck extends PreorderJmmVisitor<Integer,Integer> {
             }
         }
 
-        if (methodParameters == null && methodArgs.size() != 0) {
-            if (symbolTable.getImports().isEmpty()) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should have " + methodParameters.size() + " arguments"));
+        if (methodParameters == null ) {
+            if (methodArgs.size() == 0) {
                 return 0;
             }
-            return 1;
-        }
-
-        else if (methodParameters == null && methodArgs.size() == 0) {
-            return 1;
+            else {
+                if (symbolTable.getImports().isEmpty()) {
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Method " + methodName + " should have " + methodParameters.size() + " arguments"));
+                }
+            }
         }
 
         else {
             if (methodParameters.size() != methodArgs.size()) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should have " + methodParameters.size() + " arguments"));
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Method " + methodName + " should have " + methodParameters.size() + " arguments"));
                 return 0;
             }
-        }
+            for (int i = 0; i < methodParameters.size(); i++) {
+                String methodParameterType = methodParameters.get(i).getType().getName();
+                boolean isArray = methodParameters.get(i).getType().isArray();
 
+                boolean isMathExpression = symbolTable.isMathExpression(methodArgs.get(i).getKind());
+                boolean isBooleanExpression = symbolTable.isBooleanExpression(methodArgs.get(i).getKind());
 
-
-        for (int i = 0; i < methodParameters.size(); i++) {
-            String methodParameterType = methodParameters.get(i).getType().getName();
-            boolean isArray = methodParameters.get(i).getType().isArray();
-
-            boolean isMathExpression = symbolTable.isMathExpression(methodArgs.get(i).getKind());
-            boolean isBooleanExpression = symbolTable.isBooleanExpression(methodArgs.get(i).getKind());
-
-            String argumentType = null;
-            boolean isArgumentArray = false;
-            if (methodArgs.get(i).getKind().equals("This")) {
-                argumentType = symbolTable.getClassName();
-            }
-            else {
-                if (isMathExpression || methodArgs.get(i).getKind().equals("IntLiteral")
-                        || methodArgs.get(i).getKind().equals("ArrayAccess") || methodArgs.get(i).getKind().equals("ArrayLength")) {
-                    argumentType = "int";
-                }
-                else if (isBooleanExpression || methodArgs.get(i).getKind().equals("BoolLiteral") || methodArgs.get(i).getKind().equals("Not")) {
-                    argumentType = "boolean";
-                }
-                else if (methodArgs.get(i).getKind().equals("Id")) {
-                    String id = methodArgs.get(i).get("name");
-                    Symbol idSymbol = symbolTable.findField(id);
-                    if (idSymbol == null) {
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should have " + methodParameterType + " as argument"));
-                        return 0;
-                    }
-                    argumentType = idSymbol.getType().getName();
-                    isArgumentArray = idSymbol.getType().isArray();
-                }
-                else if (methodArgs.get(i).getKind().equals("NewIntArray")) {
-                    isArgumentArray = true;
-                }
-                else if (methodArgs.get(i).getKind().equals("NewObject")) {
-                    argumentType = methodArgs.get(i).get("name");
+                String argumentType = null;
+                boolean isArgumentArray = false;
+                if (methodArgs.get(i).getKind().equals("This")) {
+                    argumentType = symbolTable.getClassName();
                 }
                 else {
-                    String a = methodArgs.get(i).get("caller");
-                    var returnType = symbolTable.getReturnType(a);
-                    if( returnType == null){
-                        if (symbolTable.getImports().isEmpty()) {
-                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should have " + methodParameterType + " as argument"));
+                    if (isMathExpression || methodArgs.get(i).getKind().equals("IntLiteral")
+                            || methodArgs.get(i).getKind().equals("ArrayAccess") || methodArgs.get(i).getKind().equals("ArrayLength")) {
+                        argumentType = "int";
+                    }
+                    else if (isBooleanExpression || methodArgs.get(i).getKind().equals("BoolLiteral") || methodArgs.get(i).getKind().equals("Not")) {
+                        argumentType = "boolean";
+                    }
+                    else if (methodArgs.get(i).getKind().equals("Id")) {
+                        String id = methodArgs.get(i).get("name");
+                        Symbol idSymbol = symbolTable.findField(id);
+                        if (idSymbol == null) {
+                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Method " + methodName + " should have " + methodParameterType + " as argument"));
                             return 0;
                         }
-                        else {
-                            return 1;
-                        }
+                        argumentType = idSymbol.getType().getName();
+                        isArgumentArray = idSymbol.getType().isArray();
                     }
-                    argumentType = returnType.getName();
-                    isArgumentArray = returnType.isArray();
+                    else if (methodArgs.get(i).getKind().equals("NewIntArray")) {
+                        isArgumentArray = true;
+                    }
+                    else if (methodArgs.get(i).getKind().equals("NewObject")) {
+                        argumentType = methodArgs.get(i).get("name");
+                    }
+                    else {
+                        String a = methodArgs.get(i).get("caller");
+                        var returnType = symbolTable.getReturnType(a);
+                        if( returnType == null){
+                            if (symbolTable.getImports().isEmpty()) {
+                                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Method " + methodName + " should have " + methodParameterType + " as argument"));
+                                return 0;
+                            }
+                            else {
+                                return 1;
+                            }
+                        }
+                        argumentType = returnType.getName();
+                        isArgumentArray = returnType.isArray();
+                    }
                 }
-            }
-            if (isArgumentArray && !isArray) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should have " + methodParameterType + " as argument"));
-                return 0;
-            }
+                if (isArgumentArray && isArray && methodParameterType.equals(argumentType)) {
+                    continue;
+                }
+                else if (!isArgumentArray && !isArray && methodParameterType.equals(argumentType)) {
+                    continue;
+                }
+                else {
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Method " + methodName + " should have " + methodParameterType + " as argument"));
+                }
 
-            if (!methodParameterType.equals(argumentType) && !isArgumentArray && !isArray) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should have " + methodParameterType + " as argument"));
-                return 0;
             }
         }
         return 0;

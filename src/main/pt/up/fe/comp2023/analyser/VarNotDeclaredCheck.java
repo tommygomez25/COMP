@@ -29,7 +29,7 @@ public class VarNotDeclaredCheck extends PreorderJmmVisitor<Integer, Integer> {
 
         String varName = node.get("name");
         if (!symbolTable.isVarDeclared(varName)) {
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Variable " + varName + " not declared"));
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Variable " + varName + " not declared"));
             return 0;
         }
 
