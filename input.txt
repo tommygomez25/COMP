@@ -3,10 +3,12 @@ import bar.foo.A;
 class ClassNotImported {
 
     public static void main(String[] args) {
-       this;
+
     }
 
     public int foo() {
+        A a;
+        a = this;
         return 1;
     }
 }

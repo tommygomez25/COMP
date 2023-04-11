@@ -25,6 +25,9 @@ public class ThisStaticCheck extends PreorderJmmVisitor<Integer, Integer>{
     }
 
     public Integer visitAssign(JmmNode jmmNode, Integer arg) {
+        var varName = jmmNode.get("varName");
+        var varType = symbolTable.getVarType(varName);
+
         for (JmmNode child : jmmNode.getChildren()) {
             if (child.getKind().equals("This")) {
                 if (child.getAncestor("Method").isPresent()) {
@@ -32,8 +35,22 @@ public class ThisStaticCheck extends PreorderJmmVisitor<Integer, Integer>{
                         reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Cannot use this in main method"));
                     }
                 }
+                if (varType != null) {
+                    if (symbolTable.isVarClass(varName)) {
+                           if (varType.getName().equals(symbolTable.getClassName())) {return 1;}
+                           else if (varType.getName().equals(symbolTable.getSuper())) {
+                               if (symbolTable.isClassImported(symbolTable.getSuper())) {
+                                   return 1;
+                               }
+                           }
+                           else {
+                               reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Cannot use this in static context"));
+                           }
+                    }
+                }
             }
         }
+
         return 1;
     }
 
