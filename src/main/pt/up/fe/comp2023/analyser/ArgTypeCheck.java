@@ -50,6 +50,13 @@ public class ArgTypeCheck extends PreorderJmmVisitor<Integer,Integer> {
             return 1;
         }
 
+        else {
+            if (methodParameters.size() != methodArgs.size()) {
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should have " + methodParameters.size() + " arguments"));
+                return 0;
+            }
+        }
+
 
 
         for (int i = 0; i < methodParameters.size(); i++) {

@@ -31,6 +31,7 @@ public class ReturnTypeCheck extends PreorderJmmVisitor<Integer,Integer> {
         String methodName = node.get("methodName");
 
         String returnType = symbolTable.getReturnType(methodName).getName();
+        boolean isArray = symbolTable.getReturnType(methodName).isArray();
 
         // iterate child and if kind is returnFromMethod
         // then check if the type is the same as the method return type
@@ -106,7 +107,7 @@ public class ReturnTypeCheck extends PreorderJmmVisitor<Integer,Integer> {
 
                 // if kind is NewIntArray
                 else if (child.getChildren().get(0).getKind().equals("NewIntArray")) {
-                    if (!returnType.equals("int[]")) {
+                    if (!isArray) {
                         reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should return " + returnType));
                     }
                 }
@@ -128,7 +129,11 @@ public class ReturnTypeCheck extends PreorderJmmVisitor<Integer,Integer> {
                         return 0;
                     }
                     var idType = idSymbol.getType().getName();
-                    if (!returnType.equals(idType)) {
+                    var isIdArray = idSymbol.getType().isArray();
+                    if (isArray && !isIdArray) {
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should return " + returnType));
+                    }
+                    if (!returnType.equals(idType) && !isArray && !isIdArray) {
                         reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should return " + returnType));
                     }
 
@@ -138,8 +143,7 @@ public class ReturnTypeCheck extends PreorderJmmVisitor<Integer,Integer> {
                         reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should return " + returnType));
                     }
                 }
-                // falta parenteses
-
+                // falta parentesis
             }
         }
 
