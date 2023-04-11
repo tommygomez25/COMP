@@ -27,8 +27,10 @@ public class ThisStaticCheck extends PreorderJmmVisitor<Integer, Integer>{
     public Integer visitAssign(JmmNode jmmNode, Integer arg) {
         for (JmmNode child : jmmNode.getChildren()) {
             if (child.getKind().equals("This")) {
-                if (child.getAncestor("Method").get().get("methodName").equals("main")) {
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Cannot use this in main method"));
+                if (child.getAncestor("Method").isPresent()) {
+                    if (child.getAncestor("Method").get().get("methodName").equals("main")) {
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Cannot use this in main method"));
+                    }
                 }
             }
         }
@@ -36,8 +38,15 @@ public class ThisStaticCheck extends PreorderJmmVisitor<Integer, Integer>{
     }
 
     public Integer visitThis(JmmNode jmmNode, Integer arg) {
-        if (jmmNode.getAncestor("Method").get().get("methodName").equals("main")) {
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Cannot use this in main method"));
+
+        if (jmmNode.getAncestor("Method").isPresent()) {
+            if (jmmNode.getAncestor("Method").get().get("methodName").equals("main")) {
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Cannot use this in main method"));
+            }
+        }
+
+        if (jmmNode.getAncestor("Method").isEmpty()) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Cannot use this outside a method"));
         }
         return 1;
     }
