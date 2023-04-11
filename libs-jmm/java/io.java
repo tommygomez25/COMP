@@ -5,7 +5,7 @@ import java.util.*;
 
 public class io {
 
-    // buffer to emulate the buffer of the keyboard
+	// buffer to emulate the buffer of the keyboard
 	static Vector Buffer = new Vector();
 	static boolean init;
 
@@ -16,33 +16,33 @@ public class io {
 			init = true;
 
 
-				BufferedReader teclado = new BufferedReader(new InputStreamReader(System.in));
-				String line;
-	try {
+			BufferedReader teclado = new BufferedReader(new InputStreamReader(System.in));
+			String line;
+			try {
 				if((line=teclado.readLine()) != null)
 				{
 
-    				String[] tokens = line.split("\\s");
+					String[] tokens = line.split("\\s");
 
-     				for (int i=0; i<tokens.length; i++) {
-         				//System.out.println(tokens[i]);
+					for (int i=0; i<tokens.length; i++) {
+						//System.out.println(tokens[i]);
 
 						int value=Integer.parseInt(tokens[i]);
 
 						//System.out.println("valor lido: "+value);
 
 						if(!init) {
-							Buffer.addElement(new Integer(value));
+							Buffer.addElement(Integer.valueOf(value));
 						} else {
 							a = value;
 							init = false;
 						}
-						}
-						}
-						} catch (java.io.IOException e) {
-			System.out.println(e);
-			System.exit(1);
-		}
+					}
+				}
+			} catch (java.io.IOException e) {
+				System.out.println(e);
+				System.exit(1);
+			}
 
 		} else {
 			Integer top = (Integer) Buffer.firstElement();
@@ -68,7 +68,7 @@ public class io {
 		System.out.print(c+a);
 	}
 
-    final static void print(int a) {
+	final static void print(int a) {
 		System.out.print(a);
 	}
 
@@ -76,19 +76,28 @@ public class io {
 		System.out.print(a);
 	}
 
+	final static void print(boolean a) {
+		System.out.print(a);
+	}
+
 	final static void println() {
 		System.out.println();
 	}
-	
+
 	final static void println(String c, int a) {
 		System.out.println(c+a);
 	}
 
-    final static void println(int a) {
+	final static void println(int a) {
 		System.out.println(a);
 	}
 
 	final static void println(String a) {
 		System.out.println(a);
-	}	
+	}
+
+	final static void println(boolean a) {
+		System.out.println(a);
+	}
 }
+

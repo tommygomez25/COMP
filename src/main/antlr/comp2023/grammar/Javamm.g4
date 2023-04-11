@@ -23,8 +23,11 @@ varDeclaration :
     fieldType = type fieldName = ID ';' #Field;
 
 methodDeclaration :
-    accessType='public'? type methodName=ID '(' ( type parameters+=ID ( ',' type parameters+=ID )* )? ')' '{' ( varDeclaration )* ( statement )* 'return' expression ';' '}' #Method
+    accessType='public'? type methodName=ID '(' ( type parameters+=ID ( ',' type parameters+=ID )* )? ')' '{' ( varDeclaration )* ( statement )* ret #Method
     | accessType='public'? 'static' 'void' methodName='main' '(' 'String' '[' ']' args=ID ')' '{' ( varDeclaration )* ( statement )* '}' #Method;
+
+ret :
+    'return' expression ';' '}' #ReturnFromMethod;
 
 type locals [boolean isArray = false]:
     typeName='int' ('[' ']'{$isArray = true;})?
@@ -45,16 +48,16 @@ statement :
 
 expression
     : '(' expression ')' #Parenthesis
-    | expression '[' expression ']' #ArrayAccess
+    | expression access #ArrayAccess
     | expression '.' 'length' #ArrayLength
     | '!' expression #Not
     | 'new' 'int' '[' expression ']' #NewIntArray
-    | 'new' ID '(' ')' #NewObject
+    | 'new' name= ID '(' ')' #NewObject
     | expression op=('*'|'/') expression #BinaryOp
     | expression op=('+'|'-') expression #BinaryOp
-    | expression op='<' expression #BinaryOp
-    | expression op='&&' expression #BinaryOp
-    | expression '.' caller=ID '(' ( expression ( ',' expression )* )? ')' #MethodCall
+    | expression op='<' expression #BooleanOp
+    | expression op='&&' expression #BooleanOp
+    | expression '.' caller=ID argum #MethodCall
     | var=INT #IntLiteral
     | var='true' #BoolLiteral
     | var='false' #BoolLiteral
@@ -62,3 +65,8 @@ expression
     | 'this' #This
     ;
 
+argum:
+    '(' ( expression ( ',' expression )* )? ')' #Arguments;
+
+access:
+    '[' expression ']' #Accessors;

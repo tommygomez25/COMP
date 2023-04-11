@@ -1,20 +1,17 @@
 
-class helloWorld{
-    int field1;
-    boolean field2;
-    String field3;
-    int[] field4;
+import A;
+import M;
 
+class CallToMethodAssumedInImport extends A {
     public static void main(String[] args) {
-            String a;
-            a = 2 * (1 + 2);
+
     }
 
-    public int newMethod(int a, String b, Object c) {
-        int a;
-        int[] d;
-        String f;
-        a = 2 * (1 + 2);
-        return a;
+    public int foo() {
+        bool a;
+        a = M.bar();
+
+        return 0;
     }
 }
+
