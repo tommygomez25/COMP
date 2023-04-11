@@ -49,7 +49,7 @@ public class UndeclaredMethodCheck extends PreorderJmmVisitor<Integer, Integer> 
 
             // vou ver À symbol table se a variável é uma classe
             // se for uma classe, vou ver se é a class que estou a ver
-            // se for a classe que estou a ver, verifico se ela tem o método que foi chhamado
+            // se for a classe que estou a ver, verifico se ela tem o método que foi chamado
             // se nao for a classe que estou a ver, verifico se ela é a super classe e se essa super classe está importada
             // ou se nao for super classe, verifico se a classe está importada
             // se a classe não estiver importada, reporto erro

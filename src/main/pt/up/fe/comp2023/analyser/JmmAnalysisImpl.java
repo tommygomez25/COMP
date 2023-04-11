@@ -53,9 +53,6 @@ public class JmmAnalysisImpl implements JmmAnalysis {
             var thisStaticCheck = new ThisStaticCheck(mySymbolTable,symbolTableReports);
             thisStaticCheck.visit(rootNode, null);
 
-            var arrayIndexNotIntCheck = new ArrayIndexNotIntCheck(mySymbolTable,symbolTableReports);
-            arrayIndexNotIntCheck.visit(rootNode, null);
-
             var arrayAccessCheck = new ArrayAccessCheck(mySymbolTable,symbolTableReports);
             arrayAccessCheck.visit(rootNode, null);
 

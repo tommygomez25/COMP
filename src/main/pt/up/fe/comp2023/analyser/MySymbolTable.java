@@ -3,6 +3,7 @@ package pt.up.fe.comp2023.analyser;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
+import pt.up.fe.comp.jmm.ast.JmmNode;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -329,7 +330,6 @@ class MySymbolTable implements SymbolTable {
 
         return false;
     }
-
 
 }
 
