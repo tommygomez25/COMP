@@ -40,15 +40,6 @@ public class UndeclaredMethodCheck extends PreorderJmmVisitor<Integer, Integer> 
             return 1;
         }
 
-        else {
-            if (superClass != null) {
-                if (!symbolTable.isClassImported(superClass)) {
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), Integer.parseInt(jmmNode.get("colStart")), "Method " + methodName + " not declared because " + superClass + " is not imported"));
-                }
-            }
-
-        }
-
         // check child nodes, if kind is Arguments we dont care about it
         for (JmmNode child : jmmNode.getChildren()) {
             if (child.getKind().equals("Arguments")) {
@@ -89,6 +80,11 @@ public class UndeclaredMethodCheck extends PreorderJmmVisitor<Integer, Integer> 
                                 }
                             }
                         }
+
+                    }
+                    else {
+                        // var is not class
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), Integer.parseInt(jmmNode.get("colStart")), "Method " + methodName + " not declared"));
 
                     }
                 }
