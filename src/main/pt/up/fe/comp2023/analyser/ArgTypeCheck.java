@@ -54,11 +54,13 @@ public class ArgTypeCheck extends PreorderJmmVisitor<Integer,Integer> {
 
         for (int i = 0; i < methodParameters.size(); i++) {
             String methodParameterType = methodParameters.get(i).getType().getName();
+            boolean isArray = methodParameters.get(i).getType().isArray();
 
             boolean isMathExpression = symbolTable.isMathExpression(methodArgs.get(i).getKind());
             boolean isBooleanExpression = symbolTable.isBooleanExpression(methodArgs.get(i).getKind());
 
-            String argumentType;
+            String argumentType = null;
+            boolean isArgumentArray = false;
             if (methodArgs.get(i).getKind().equals("This")) {
                 argumentType = symbolTable.getClassName();
             }
@@ -78,9 +80,10 @@ public class ArgTypeCheck extends PreorderJmmVisitor<Integer,Integer> {
                         return 0;
                     }
                     argumentType = idSymbol.getType().getName();
+                    isArgumentArray = idSymbol.getType().isArray();
                 }
                 else if (methodArgs.get(i).getKind().equals("NewIntArray")) {
-                    argumentType = "int[]";
+                    isArgumentArray = true;
                 }
                 else if (methodArgs.get(i).getKind().equals("NewObject")) {
                     argumentType = methodArgs.get(i).get("name");
@@ -98,9 +101,15 @@ public class ArgTypeCheck extends PreorderJmmVisitor<Integer,Integer> {
                         }
                     }
                     argumentType = returnType.getName();
+                    isArgumentArray = returnType.isArray();
                 }
             }
-            if (!methodParameterType.equals(argumentType)) {
+            if (isArgumentArray && !isArray) {
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should have " + methodParameterType + " as argument"));
+                return 0;
+            }
+
+            if (!methodParameterType.equals(argumentType) && !isArgumentArray && !isArray) {
                 reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt("-1"), "Method " + methodName + " should have " + methodParameterType + " as argument"));
                 return 0;
             }

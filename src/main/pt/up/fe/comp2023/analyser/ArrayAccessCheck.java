@@ -32,7 +32,7 @@ public class ArrayAccessCheck extends PreorderJmmVisitor<Integer, Integer> {
         boolean isMathExpression = symbolTable.isMathExpression(accessor.getKind());
         boolean isBooleanExpression = symbolTable.isBooleanExpression(accessor.getKind());
 
-        if (!array.getKind().equals("Id") || !array.getKind().equals("NewIntArray")) {
+        if (!array.getKind().equals("Id") && !array.getKind().equals("NewIntArray")) {
             reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Array access on non-array"));
         }
 
@@ -41,9 +41,10 @@ public class ArrayAccessCheck extends PreorderJmmVisitor<Integer, Integer> {
             if (arrayType == null) {
                 reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Array access on non-array"));
             }
-            else if (!arrayType.getName().equals("int[]")) {
+            else if (!arrayType.isArray()) {
                 reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Array access on non-array"));
             }
+
         }
 
         if (isBooleanExpression || accessor.getKind().equals("BoolLiteral") ||
