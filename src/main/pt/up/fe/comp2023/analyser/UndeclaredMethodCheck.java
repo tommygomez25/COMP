@@ -88,28 +88,28 @@ public class UndeclaredMethodCheck extends PreorderJmmVisitor<Integer, Integer> 
 
                     }
                 }
-                else if (child.getKind().equals("This")){
-                    if (!symbolTable.getMethods().contains(methodName)) {
-                        if (superClass != null) {
-                            if (!symbolTable.isClassImported(superClass)) {
-                                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), Integer.parseInt(jmmNode.get("colStart")), "Method " + methodName + " not declared because " + superClass + " is not imported"));
-                            }
-                        } else {
-                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), Integer.parseInt(jmmNode.get("colStart")), "Method " + methodName + " not declared"));
+            }
+            else if (child.getKind().equals("This")){
+                if (!symbolTable.getMethods().contains(methodName)) {
+                    if (superClass != null) {
+                        if (!symbolTable.isClassImported(superClass)) {
+                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), Integer.parseInt(jmmNode.get("colStart")), "Method " + methodName + " not declared because " + superClass + " is not imported"));
                         }
+                    } else {
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), Integer.parseInt(jmmNode.get("colStart")), "Method " + methodName + " not declared"));
                     }
                 }
-                else if (child.getKind().equals("BinaryOp") || child.getKind().equals("BooleanOp") || child.getKind().equals("BoolLiteral") ||
-                        child.getKind().equals("IntLiteral") || child.getKind().equals("Not") || child.getKind().equals("ArrayLength") ||
-                        child.getKind().equals("ArrayAccess") || child.getKind().equals("NewIntArray") || child.getKind().equals("NewObject")) {
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), Integer.parseInt(jmmNode.get("colStart")), "Method " + methodName + " not declared"));
-                }
-                else if (child.getKind().equals("MethodCall")) {
-                    visitMethod(child, ret);
-                }
             }
-
+            else if (child.getKind().equals("BinaryOp") || child.getKind().equals("BooleanOp") || child.getKind().equals("BoolLiteral") ||
+                    child.getKind().equals("IntLiteral") || child.getKind().equals("Not") || child.getKind().equals("ArrayLength") ||
+                    child.getKind().equals("ArrayAccess") || child.getKind().equals("NewIntArray") || child.getKind().equals("NewObject")) {
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), Integer.parseInt(jmmNode.get("colStart")), "Method " + methodName + " not declared"));
+            }
+            else if (child.getKind().equals("MethodCall")) {
+                visitMethod(child, ret);
+            }
         }
+
         return 1;
     }
 }
