@@ -1,13 +1,11 @@
-class ArrayAccessOnInt {
+class VarNotDeclared {
+
 
     public static void main(String[] args) {
-
+        a = 10;
     }
 
     public int foo() {
-        int a;
-        a = 0;
-
-        return this[10];
+        return x;
     }
 }

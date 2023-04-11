@@ -23,6 +23,7 @@ public class VarNotDeclaredCheck extends PreorderJmmVisitor<Integer, Integer> {
     @Override
     protected void buildVisitor() {
         addVisit("Id", this::visitExpr);
+        addVisit("Assign", this::visitAssign);
     }
 
     public Integer visitExpr(JmmNode node, Integer ret) {
@@ -34,5 +35,14 @@ public class VarNotDeclaredCheck extends PreorderJmmVisitor<Integer, Integer> {
         }
 
     return 1;
+    }
+
+    public Integer visitAssign(JmmNode node, Integer ret) {
+        String varName = node.get("varName");
+        if (!symbolTable.isVarDeclared(varName)) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Variable " + varName + " not declared"));
+            return 0;
+        }
+        return 1;
     }
 }
