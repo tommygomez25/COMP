@@ -21,6 +21,7 @@ public class ThisStaticCheck extends PreorderJmmVisitor<Integer, Integer>{
     @Override
     protected void buildVisitor() {
         addVisit("Assign", this::visitAssign);
+        addVisit("This",this::visitThis);
     }
 
     public Integer visitAssign(JmmNode jmmNode, Integer arg) {
@@ -33,6 +34,16 @@ public class ThisStaticCheck extends PreorderJmmVisitor<Integer, Integer>{
                     reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Cannot use this in main method"));
                 }
             }
+        }
+        return 1;
+    }
+
+    public Integer visitThis(JmmNode jmmNode, Integer arg) {
+        while (jmmNode.getAncestor("Method").isEmpty()) {
+            jmmNode = jmmNode.getJmmParent();
+        }
+        if (jmmNode.getAncestor("Method").get().get("methodName").equals("main")) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Cannot use this in main method"));
         }
         return 1;
     }
