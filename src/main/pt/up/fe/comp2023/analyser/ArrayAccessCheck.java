@@ -32,7 +32,7 @@ public class ArrayAccessCheck extends PreorderJmmVisitor<Integer, Integer> {
         boolean isMathExpression = symbolTable.isMathExpression(accessor.getKind());
         boolean isBooleanExpression = symbolTable.isBooleanExpression(accessor.getKind());
 
-        if (!array.getKind().equals("Id")) {
+        if (!array.getKind().equals("Id") || !array.getKind().equals("NewIntArray")) {
             reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Array access on non-array"));
         }
 
