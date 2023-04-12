@@ -5,7 +5,7 @@ class VarNotDeclared {
     }
 
     public int foo() {
-        a[2] = 1;
+        a.length;
         return 1;
     }
 }
