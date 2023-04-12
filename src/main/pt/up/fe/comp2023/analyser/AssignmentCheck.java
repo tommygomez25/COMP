@@ -28,37 +28,6 @@ public class AssignmentCheck extends PreorderJmmVisitor<Integer, Integer> {
 
     public Integer visitAssign(JmmNode node, Integer ret) {
 
-        String varName = node.get("varName");
-        if (!symbolTable.isVarDeclared(varName)) {
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Variable " + varName + " not declared"));
-        }
-
-        var varType = symbolTable.getVarType(varName);
-
-        for (JmmNode child : node.getChildren()) {
-            if (child.getKind().equals("This")) {
-                if (child.getAncestor("Method").isPresent()) {
-                    if (child.getAncestor("Method").get().get("methodName").equals("main")) {
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot use this in main method"));
-
-                    }
-                }
-                if (varType != null) {
-                    if (symbolTable.isVarClass(varName)) {
-                        if (varType.getName().equals(symbolTable.getClassName())) {continue;}
-                        else if (varType.getName().equals(symbolTable.getSuper())) {
-                            if (symbolTable.isClassImported(symbolTable.getSuper())) {
-                                continue;
-                            }
-                        }
-                        else {
-                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot use this in static context"));
-                        }
-                    }
-                }
-            }
-        }
-
         JmmNode right = node.getChildren().get(0);
 
         Type leftType = symbolTable.getVarType(node.get("varName"));
@@ -73,11 +42,6 @@ public class AssignmentCheck extends PreorderJmmVisitor<Integer, Integer> {
     }
 
     public Integer visitArrayAssign(JmmNode node, Integer ret) {
-
-        String varName = node.get("varName");
-        if (!symbolTable.isVarDeclared(varName)) {
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Variable " + varName + " not declared"));
-        }
 
         JmmNode right = node.getChildren().get(0);
 

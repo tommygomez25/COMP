@@ -42,6 +42,8 @@ public class AnalysisUtils {
             case "Id" -> {
                 String varName = node.get("name");
                 Symbol varSymbol = symbolTable.findField(varName);
+                if (varSymbol == null)
+                    return new Type("unknown",false);
                 return varSymbol.getType();
             }
             case "This" -> {

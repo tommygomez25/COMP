@@ -25,7 +25,10 @@ public class VarNotDeclaredCheck extends PreorderJmmVisitor<Integer, Integer> {
     @Override
     protected void buildVisitor() {
         addVisit("Id", this::visitExpr);
+        addVisit("Assign", this::visitAssign);
+        addVisit("ArrayAssign",this::visitArrayAssign);
         addVisit("ArrayLength", this::visitArrayLength);
+        addVisit("ArrayAccess", this::visitArrayAccess);
     }
 
     public Integer visitExpr(JmmNode node, Integer ret) {
@@ -39,6 +42,23 @@ public class VarNotDeclaredCheck extends PreorderJmmVisitor<Integer, Integer> {
     return 1;
     }
 
+    public Integer visitAssign(JmmNode node, Integer ret) {
+        String varName = node.get("varName");
+        if (!symbolTable.isVarDeclared(varName)) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Variable " + varName + " not declared"));
+            return 0;
+        }
+        return 1;
+    }
+
+    public Integer visitArrayAssign(JmmNode node, Integer ret) {
+        String varName = node.get("varName");
+        if (!symbolTable.isVarDeclared(varName)) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Variable " + varName + " not declared"));
+            return 0;
+        }
+        return 1;
+    }
 
     public Integer visitArrayLength(JmmNode node, Integer ret) {
         JmmNode array = node.getChildren().get(0);
@@ -56,4 +76,13 @@ public class VarNotDeclaredCheck extends PreorderJmmVisitor<Integer, Integer> {
         return 1;
     }
 
+    public Integer visitArrayAccess(JmmNode jmmNode, Integer ret) {
+        JmmNode array = jmmNode.getChildren().get(0);
+        Symbol operandType = AnalysisUtils.getSymbol(array, symbolTable);
+        if (!symbolTable.isVarDeclared(operandType.getName())) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Variable " + operandType.getName() + " not declared"));
+            return 0;
+        }
+        return 1;
+    }
 }
