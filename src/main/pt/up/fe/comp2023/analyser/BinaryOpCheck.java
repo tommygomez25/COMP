@@ -13,7 +13,6 @@ public class BinaryOpCheck extends PreorderJmmVisitor<Integer,Integer> {
     public BinaryOpCheck(MySymbolTable symbolTable,List<Report> reports) {
         this.reports = reports;
         this.symbolTable = symbolTable;
-        addVisit("BinaryOp", this::visitBinaryOp);
         setDefaultVisit((node,oi)->0);
     }
 
@@ -26,6 +25,6 @@ public class BinaryOpCheck extends PreorderJmmVisitor<Integer,Integer> {
 
     @Override
     protected void buildVisitor() {
-
+        addVisit("BinaryOp", this::visitBinaryOp);
     }
 }
