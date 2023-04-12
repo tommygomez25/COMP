@@ -81,6 +81,7 @@ public class AnalysisUtils {
     }
 
     public static boolean typeIsCompatibleWith(Type type1, Type type2, MySymbolTable symbolTable) {
+        if (type1.getName().equals("unknown") || type2.getName().equals("unknown")) return false;
         if (type1.equals(type2)) return true;
         if (type1.isArray() != type2.isArray()) return false;
         if (PRIMITIVES.contains(type1.getName()) || PRIMITIVES.contains(type2.getName())) return false;

@@ -254,7 +254,7 @@ class MySymbolTable implements SymbolTable {
             }
         }
 
-        return null;
+        return new Symbol(new Type("unknown",false),name);
     }
 
     public Type getVarType(String varName) {
@@ -283,7 +283,7 @@ class MySymbolTable implements SymbolTable {
             }
         }
 
-        return null;
+        return new Type("unknown",false);
     }
 
     public boolean isClassImported(String className){

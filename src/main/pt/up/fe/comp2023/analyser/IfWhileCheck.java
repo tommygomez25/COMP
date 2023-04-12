@@ -22,7 +22,7 @@ public class IfWhileCheck extends PreorderJmmVisitor<Integer, Integer> {
     public Integer visitIfElse(JmmNode node, Integer arg) {
         JmmNode condition = node.getChildren().get(0);
         Type conditionType = AnalysisUtils.getType(condition, symbolTable);
-        if (conditionType == null) {
+        if (conditionType.getName().equals("unknown")) {
             return 0;
         }
         if (conditionType.isArray()) {
@@ -39,7 +39,7 @@ public class IfWhileCheck extends PreorderJmmVisitor<Integer, Integer> {
     public Integer visitWhile(JmmNode node, Integer arg) {
         JmmNode condition = node.getChildren().get(0);
         Type conditionType = AnalysisUtils.getType(condition, symbolTable);
-        if (conditionType == null) {
+        if (conditionType.getName().equals("unknown")) {
             return 0;
         }
         if (conditionType.isArray()) {

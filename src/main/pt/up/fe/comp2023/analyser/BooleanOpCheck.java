@@ -27,7 +27,7 @@ public class BooleanOpCheck extends PreorderJmmVisitor<Integer,Integer> {
         Type leftType = AnalysisUtils.getType(left,symbolTable);
         Type rightType = AnalysisUtils.getType(right,symbolTable);
 
-        if (leftType == null || rightType == null) {
+        if (leftType.getName().equals("unknown") || rightType.getName().equals("unknown")) {
             return 0;
         }
 

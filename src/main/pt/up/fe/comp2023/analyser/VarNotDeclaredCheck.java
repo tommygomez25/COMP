@@ -63,7 +63,7 @@ public class VarNotDeclaredCheck extends PreorderJmmVisitor<Integer, Integer> {
     public Integer visitArrayLength(JmmNode node, Integer ret) {
         JmmNode array = node.getChildren().get(0);
         Symbol operandType = AnalysisUtils.getSymbol(array, symbolTable);
-        if (operandType == null) {
+        if (operandType.getType().getName().equals("unknown")) {
             reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Variable not declared"));
             return 0;
         }
@@ -79,6 +79,12 @@ public class VarNotDeclaredCheck extends PreorderJmmVisitor<Integer, Integer> {
     public Integer visitArrayAccess(JmmNode jmmNode, Integer ret) {
         JmmNode array = jmmNode.getChildren().get(0);
         Symbol operandType = AnalysisUtils.getSymbol(array, symbolTable);
+
+        if (operandType.getType().getName().equals("unknown")) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Variable not declared"));
+            return 0;
+        }
+
         if (!symbolTable.isVarDeclared(operandType.getName())) {
             reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Variable " + operandType.getName() + " not declared"));
             return 0;
