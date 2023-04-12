@@ -1,5 +1,6 @@
 package pt.up.fe.comp2023.analyser;
 
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.PreorderJmmVisitor;
@@ -29,6 +30,11 @@ public class ArrayAccessCheck extends PreorderJmmVisitor<Integer, Integer> {
     public Integer visitArrayAccess(JmmNode jmmNode, Integer arg) {
 
         JmmNode array = jmmNode.getChildren().get(0);
+        Symbol operandSymbol = AnalysisUtils.getSymbol(array, symbolTable);
+        if (!symbolTable.isVarDeclared(operandSymbol.getName())) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Variable " + operandSymbol.getName() + " not declared"));
+        }
+
         JmmNode accessor = jmmNode.getChildren().get(1).getChildren().get(0);
 
         Type operandType = AnalysisUtils.getType(array, symbolTable);

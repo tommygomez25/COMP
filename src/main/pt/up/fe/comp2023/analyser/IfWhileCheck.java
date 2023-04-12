@@ -43,11 +43,11 @@ public class IfWhileCheck extends PreorderJmmVisitor<Integer, Integer> {
             return 0;
         }
         if (conditionType.isArray()) {
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot apply operator" + "while" + " to array"));
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot apply operator while" + " to array"));
             return 0;
         }
         if (!conditionType.getName().equals("boolean")) {
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot apply operator" + "while" + " to " + conditionType.getName()));
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot apply operator while" + " to " + conditionType.getName()));
             return 0;
         }
         return 0;
