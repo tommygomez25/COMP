@@ -1,14 +1,21 @@
 package pt.up.fe.comp2023.analyser;
 
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
+import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp2023.analyser.MySymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static pt.up.fe.comp2023.analyser.AnalysisUtils.getSymbol;
 
 public class AnalysisUtils {
-
+    static final List<String> PRIMITIVES = Arrays.asList("int", "void", "boolean");
+    static final List<String> ARITHMETIC_OP = Arrays.asList("+", "-", "*", "/");
+    static final List<String> COMPARISON_OP = List.of("<");
+    static final List<String> LOGICAL_OP = List.of("&&");
     public static Type getType(JmmNode node, MySymbolTable symbolTable) {
 
         String kind = node.getKind();
@@ -69,6 +76,15 @@ public class AnalysisUtils {
             }
             default -> throw new RuntimeException("Unknown kind: " + kind);
         }
+    }
+
+    public static boolean typeIsCompatibleWith(Type type1, Type type2, MySymbolTable symbolTable) {
+        if (type1.equals(type2)) return true;
+        if (type1.isArray() != type2.isArray()) return false;
+        if (PRIMITIVES.contains(type1.getName()) || PRIMITIVES.contains(type2.getName())) return false;
+        if (type2.getName().equals(symbolTable.getClassName()) && symbolTable.getSuper() == null) return false; // if type2 is the current class and it has no super class
+        if (symbolTable.getSuper() == null) return true;
+        return !(type1.getName().equals(symbolTable.getClassName()) && symbolTable.getSuper().equals(type2.getName())); // checks if type1 extends type2
     }
 
 }

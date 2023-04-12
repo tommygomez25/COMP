@@ -56,6 +56,9 @@ public class JmmAnalysisImpl implements JmmAnalysis {
             var arrayAccessCheck = new ArrayAccessCheck(mySymbolTable,symbolTableReports);
             arrayAccessCheck.visit(rootNode, null);
 
+            var assignmentCheck = new AssignmentCheck(mySymbolTable,symbolTableReports);
+            assignmentCheck.visit(rootNode, null);
+
             System.out.println(symbolTableReports);
 
             return new JmmSemanticsResult(jmmParserResult, mySymbolTable, symbolTableReports);
