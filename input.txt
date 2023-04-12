@@ -1,11 +1,11 @@
 class VarNotDeclared {
 
-
     public static void main(String[] args) {
-        a = 10;
+
     }
 
     public int foo() {
-        return x;
+        a[2] = 1;
+        return 1;
     }
 }
