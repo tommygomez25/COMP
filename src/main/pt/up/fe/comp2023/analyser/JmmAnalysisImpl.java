@@ -62,6 +62,9 @@ public class JmmAnalysisImpl implements JmmAnalysis {
             var BinaryOpCheck = new BinaryOpCheck(mySymbolTable,symbolTableReports);
             BinaryOpCheck.visit(rootNode, null);
 
+            var IfWhileCheck = new IfWhileCheck(mySymbolTable,symbolTableReports);
+            IfWhileCheck.visit(rootNode, null);
+
             System.out.println(symbolTableReports);
 
             return new JmmSemanticsResult(jmmParserResult, mySymbolTable, symbolTableReports);

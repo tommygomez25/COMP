@@ -9,17 +9,17 @@ import pt.up.fe.comp.jmm.report.Stage;
 
 import java.util.List;
 
-public class BinaryOpCheck extends PreorderJmmVisitor<Integer,Integer> {
+public class BooleanOpCheck extends PreorderJmmVisitor<Integer,Integer> {
     private final MySymbolTable symbolTable;
     private final List<Report> reports;
 
-    public BinaryOpCheck(MySymbolTable symbolTable,List<Report> reports) {
+    public BooleanOpCheck(MySymbolTable symbolTable,List<Report> reports) {
         this.reports = reports;
         this.symbolTable = symbolTable;
         setDefaultVisit((node,oi)->0);
     }
 
-    public Integer visitBinaryOp(JmmNode node, Integer arg) {
+    public Integer visitBooleanOp(JmmNode node, Integer arg) {
         JmmNode left = node.getChildren().get(0);
         JmmNode right = node.getChildren().get(1);
         String op = node.get("op");
@@ -36,7 +36,19 @@ public class BinaryOpCheck extends PreorderJmmVisitor<Integer,Integer> {
             return 0;
         }
 
-        if (AnalysisUtils.ARITHMETIC_OP.contains(op)) {
+        if (AnalysisUtils.LOGICAL_OP.contains(op)) {
+            if (leftType.isArray() || rightType.isArray()) {
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot apply operator" + op + " to array"));
+                return 0;
+            }
+            if (!(leftType.getName().equals("boolean") && rightType.getName().equals("boolean"))) {
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot apply operator" + op + " to " + leftType.getName()));
+                return 0;
+            }
+
+        }
+
+        if (AnalysisUtils.COMPARISON_OP.contains(op)) {
             if (leftType.isArray() || rightType.isArray()) {
                 reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot apply operator" + op + " to array"));
                 return 0;
@@ -55,6 +67,6 @@ public class BinaryOpCheck extends PreorderJmmVisitor<Integer,Integer> {
 
     @Override
     protected void buildVisitor() {
-        addVisit("BinaryOp", this::visitBinaryOp);
+        addVisit("BooleanOp", this::visitBooleanOp);
     }
 }
