@@ -23,9 +23,25 @@ public class AssignmentCheck extends PreorderJmmVisitor<Integer, Integer> {
     @Override
     protected void buildVisitor() {
         addVisit("Assign", this::visitAssign);
+        addVisit("ArrayAssign",this::visitArrayAssign);
     }
 
     public Integer visitAssign(JmmNode node, Integer ret) {
+
+        JmmNode right = node.getChildren().get(0);
+
+        Type leftType = symbolTable.getVarType(node.get("varName"));
+        Type rightType = AnalysisUtils.getType(right,symbolTable);
+
+        if (!AnalysisUtils.typeIsCompatibleWith(leftType,rightType,symbolTable)) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot assign " + rightType.getName() + " to " + leftType.getName()));
+            return 0;
+        }
+
+        return 1;
+    }
+
+    public Integer visitArrayAssign(JmmNode node, Integer ret) {
 
         JmmNode right = node.getChildren().get(0);
 
