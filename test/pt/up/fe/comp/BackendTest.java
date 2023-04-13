@@ -48,7 +48,7 @@ public class BackendTest {
 
     @Test
     public void testBackend(){
-        String ollirCode = SpecsIo.getResource("pt/up/fe/comp/ollir/classArray.ollir");
+        String ollirCode = SpecsIo.getResource("pt/up/fe/comp/cp2/jasmin/OllirToJasminBasic.ollir");
         Map<String, String> config = new HashMap<>();
         OllirResult ollirResult = new OllirResult(ollirCode, config);
         System.out.println(new MyJasminBackend().toJasmin(ollirResult).getJasminCode());
