@@ -1,10 +1,14 @@
 package pt.up.fe.comp2023.analyser;
 
+import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.PreorderJmmVisitor;
 import pt.up.fe.comp.jmm.report.Report;
+import pt.up.fe.comp.jmm.report.ReportType;
+import pt.up.fe.comp.jmm.report.Stage;
 
 import java.util.List;
+
 
 public class ArrayAccessCheck extends PreorderJmmVisitor<Integer, Integer> {
     private final MySymbolTable symbolTable;
@@ -23,7 +27,21 @@ public class ArrayAccessCheck extends PreorderJmmVisitor<Integer, Integer> {
     }
 
     public Integer visitArrayAccess(JmmNode jmmNode, Integer arg) {
-        System.out.println(jmmNode.getAttributes());
+
+        JmmNode array = jmmNode.getChildren().get(0);
+        JmmNode accessor = jmmNode.getChildren().get(1).getChildren().get(0);
+
+        Type operandType = AnalysisUtils.getType(array, symbolTable);
+        Type accessorType = AnalysisUtils.getType(accessor, symbolTable);
+
+        if (!operandType.isArray()) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Cannot access array element of non-array type"));
+        }
+
+        if (!accessorType.getName().equals("int")) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Array accessor must be of type int"));
+        }
+
         return 1;
     }
 }
