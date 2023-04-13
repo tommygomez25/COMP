@@ -36,7 +36,7 @@ public class ThisStaticCheck extends PreorderJmmVisitor<Integer, Integer>{
                         return 0;
                     }
                 }
-                if (varType != null) {
+                if (!varType.getName().equals("unknown")) {
                     if (symbolTable.isVarClass(varName)) {
                            if (varType.getName().equals(symbolTable.getClassName())) {return 1;}
                            else if (varType.getName().equals(symbolTable.getSuper())) {

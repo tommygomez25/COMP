@@ -55,7 +55,7 @@ public class UndeclaredMethodCheck extends PreorderJmmVisitor<Integer, Integer> 
             // se a classe não estiver importada, reporto erro
             if (child.getKind().equals("Id")) {
                 Type varType = symbolTable.getVarType(child.get("name"));
-                if (varType != null) {
+                if (!varType.getName().equals("unknown") ) {
                     if (symbolTable.isVarClass(child.get("name"))) {
                         if (varType.getName().equals(symbolTable.getClassName())) {
                             if (!symbolTable.getMethods().contains(methodName)) {

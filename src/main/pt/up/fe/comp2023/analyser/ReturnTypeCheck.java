@@ -125,7 +125,7 @@ public class ReturnTypeCheck extends PreorderJmmVisitor<Integer,Integer> {
                 else if (child.getChildren().get(0).getKind().equals("Id")) {
                     var id = child.getChildren().get(0).get("name");
                     var idSymbol = symbolTable.findField(id);
-                    if (idSymbol == null) {
+                    if (idSymbol.getType().getName().equals("unknown")) {
                         reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Return variable " + id + " is not declared"));
                         return 0;
                     }

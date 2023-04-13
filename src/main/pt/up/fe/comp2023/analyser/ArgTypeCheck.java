@@ -30,7 +30,8 @@ public class ArgTypeCheck extends PreorderJmmVisitor<Integer,Integer> {
 
     public Integer visitMethod(JmmNode node, Integer ret) {
         String methodName = node.get("caller");
-        List<Symbol> methodParameters = symbolTable.getParameters(methodName);
+        List<Symbol> methodParameters;
+        methodParameters = symbolTable.getParameters(methodName);
         List<JmmNode> methodArgs = new ArrayList<>();
         for (JmmNode child : node.getChildren()) {
             if (child.getKind().equals("Arguments")) {
@@ -38,7 +39,7 @@ public class ArgTypeCheck extends PreorderJmmVisitor<Integer,Integer> {
             }
         }
 
-        if (methodParameters == null ) {
+        if (methodParameters == null) {
             if (methodArgs.size() == 0) {
                 return 0;
             }
@@ -77,7 +78,7 @@ public class ArgTypeCheck extends PreorderJmmVisitor<Integer,Integer> {
                     else if (methodArgs.get(i).getKind().equals("Id")) {
                         String id = methodArgs.get(i).get("name");
                         Symbol idSymbol = symbolTable.findField(id);
-                        if (idSymbol == null) {
+                        if (idSymbol.getType().getName().equals("unknown")) {
                             reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Method " + methodName + " should have " + methodParameterType + " as argument"));
                             return 0;
                         }
