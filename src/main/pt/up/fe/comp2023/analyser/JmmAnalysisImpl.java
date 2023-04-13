@@ -38,11 +38,11 @@ public class JmmAnalysisImpl implements JmmAnalysis {
             MySymbolTable mySymbolTable = new MySymbolTable();
             List<Report> symbolTableReports = new MySymbolTableVisitor().visit(rootNode, mySymbolTable);
 
-            var methodUndeclaredCheck = new UndeclaredMethodCheck(mySymbolTable,symbolTableReports);
-            methodUndeclaredCheck.visit(rootNode, null);
-
             var varNotDeclaredCheck = new VarNotDeclaredCheck(mySymbolTable,symbolTableReports);
             varNotDeclaredCheck.visit(rootNode, null);
+
+            var methodUndeclaredCheck = new UndeclaredMethodCheck(mySymbolTable,symbolTableReports);
+            methodUndeclaredCheck.visit(rootNode, null);
 
             var returnTypeCheck = new ReturnTypeCheck(mySymbolTable,symbolTableReports);
             returnTypeCheck.visit(rootNode, null);
@@ -61,6 +61,9 @@ public class JmmAnalysisImpl implements JmmAnalysis {
 
             var BinaryOpCheck = new BinaryOpCheck(mySymbolTable,symbolTableReports);
             BinaryOpCheck.visit(rootNode, null);
+
+            var BooleanOpCheck = new BooleanOpCheck(mySymbolTable,symbolTableReports);
+            BooleanOpCheck.visit(rootNode, null);
 
             var IfWhileCheck = new IfWhileCheck(mySymbolTable,symbolTableReports);
             IfWhileCheck.visit(rootNode, null);

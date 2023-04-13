@@ -1,23 +1,18 @@
-class ArrayIndexNotInt {
+class BoolTimesInt {
 
     public static void main(String[] args) {
 
     }
 
-    public int bar(int a) {
-        return 0;
-    }
-
     public int foo() {
-        int[] a;
-        int[] c;
+        int a;
         int d;
         boolean b;
+        boolean c;
 
-        a = new int[2];
+        a = 10;
         b = true;
-        c = new int[2];
-
-        return a.bar();
+        b = b < c;
+        return 1;
     }
 }
