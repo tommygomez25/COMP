@@ -43,14 +43,27 @@ public class AssignmentCheck extends PreorderJmmVisitor<Integer, Integer> {
 
     public Integer visitArrayAssign(JmmNode node, Integer ret) {
 
-        JmmNode right = node.getChildren().get(0);
+        JmmNode right = node.getChildren().get(1);
+        JmmNode middle = node.getChildren().get(0);
 
         Type leftType = symbolTable.getVarType(node.get("varName"));
         Type rightType = AnalysisUtils.getType(right,symbolTable);
+        Type middleType = AnalysisUtils.getType(middle,symbolTable);
 
-        if (!AnalysisUtils.typeIsCompatibleWith(leftType,rightType,symbolTable)) {
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot assign " + rightType.getName() + " to " + leftType.getName()));
-            return 0;
+        if (node.get("varName").equals("args")) {
+            if (rightType.isArray() || !rightType.getName().equals("String")) {
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot assign " + rightType.getName() + " to " + leftType.getName() + " index"));
+            }
+        }
+
+        else {
+            if (rightType.isArray() || !rightType.getName().equals("int")) {
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot assign " + rightType.getName() + " to " + leftType.getName() + " index"));
+            }
+        }
+
+        if (!middleType.getName().equals("int") || middleType.isArray()) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Array accessor must be of type int"));
         }
 
         return 1;

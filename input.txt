@@ -5,14 +5,9 @@ class BoolTimesInt {
     }
 
     public int foo() {
-        int a;
-        int d;
-        boolean b;
-        boolean c;
-
-        a = 10;
-        b = true;
-        b = b < c;
+        int[] a;
+        int b;
+        a[1+2+3+4+5] = 1;
         return 1;
     }
 }
