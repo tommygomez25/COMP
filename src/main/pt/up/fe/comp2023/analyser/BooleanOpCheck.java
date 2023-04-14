@@ -45,7 +45,7 @@ public class BooleanOpCheck extends PreorderJmmVisitor<Integer,Integer> {
         }
 
         if (AnalysisUtils.COMPARISON_OP.contains(op)) {
-            if (!(leftType.getName().equals("int") && rightType.getName().equals("int"))) {
+            if (!leftType.getName().equals("int") || !rightType.getName().equals("int")) {
                 reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot apply operator" + op + " to " + leftType.getName()));
                 return 0;
             }

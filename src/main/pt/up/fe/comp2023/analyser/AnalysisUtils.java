@@ -20,8 +20,16 @@ public class AnalysisUtils {
 
         String kind = node.getKind();
         switch (kind) {
-            case "Parenthesis", "ArrayAccess" -> {
+            case "Parenthesis" -> {
                 return getType(node.getChildren().get(0), symbolTable);
+            }
+            case "ArrayAccess" -> {
+                Type leftType = getType(node.getChildren().get(0), symbolTable);
+                if (leftType.isArray() && leftType.getName().equals("int"))
+                    return new Type("int", false);
+                if (leftType.isArray() && leftType.getName().equals("String"))
+                    return new Type("String", false);
+                return new Type("unknown", false);
             }
             case "ArrayLength", "BinaryOp", "IntLiteral" -> {
                 return new Type("int", false);
