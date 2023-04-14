@@ -89,7 +89,7 @@ public class AnalysisUtils {
         //if (symbolTable.getSuper() == null ) return true;
         //return (type1.getName().equals(symbolTable.getClassName()) && symbolTable.getSuper().equals(type2.getName())); // checks if type1 extends type2
         if (type1.getName().equals(symbolTable.getClassName()) && type2.getName().equals(symbolTable.getSuper()) && symbolTable.isClassImported(symbolTable.getSuper())) return true;
-        if (type2.getName().equals(symbolTable.getClassName()) && type1.getName().equals(symbolTable.getSuper()) && symbolTable.isClassImported(symbolTable.getSuper())) return true;
+        if (type2.getName().equals(symbolTable.getClassName()) && type1.getName().equals(symbolTable.getSuper()) && symbolTable.isClassImported(symbolTable.getSuper())) return false;
         if (!type1.getName().equals(symbolTable.getClassName()) && !type2.getName().equals(symbolTable.getClassName()) && symbolTable.isClassImported(type1.getName()) && symbolTable.isClassImported(type2.getName())) return true;
         return false;
     }
