@@ -50,16 +50,8 @@ public class AssignmentCheck extends PreorderJmmVisitor<Integer, Integer> {
         Type rightType = AnalysisUtils.getType(right,symbolTable);
         Type middleType = AnalysisUtils.getType(middle,symbolTable);
 
-        if (node.get("varName").equals("args")) {
-            if (rightType.isArray() || !rightType.getName().equals("String")) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot assign " + rightType.getName() + " to " + leftType.getName() + " index"));
-            }
-        }
-
-        else {
-            if (rightType.isArray() || !rightType.getName().equals("int")) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot assign " + rightType.getName() + " to " + leftType.getName() + " index"));
-            }
+        if (!leftType.getName().equals(rightType.getName()) || !(leftType.isArray() == rightType.isArray())) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot assign " + rightType.getName() + " to " + leftType.getName()));
         }
 
         if (!middleType.getName().equals("int") || middleType.isArray()) {

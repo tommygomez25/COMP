@@ -85,11 +85,13 @@ public class AnalysisUtils {
         if (type1.equals(type2)) return true;
         if (type1.isArray() != type2.isArray()) return false;
         if (PRIMITIVES.contains(type1.getName()) || PRIMITIVES.contains(type2.getName())) return false;
-        if (type2.getName().equals(symbolTable.getClassName()) && symbolTable.getSuper() == null) return false; // if type2 is the current class and there is no super class
-        if (!type2.getName().equals(symbolTable.getClassName())
-                && (type1.getName().equals(symbolTable.getClassName()) || type1.getName().equals(symbolTable.getSuper()))) return false; // if type2 is not the current class and there is no super class
-        if (symbolTable.getSuper() == null ) return true;
-        return !(type1.getName().equals(symbolTable.getClassName()) && symbolTable.getSuper().equals(type2.getName())); // checks if type1 extends type2
+        //if (type2.getName().equals(symbolTable.getClassName()) && symbolTable.getSuper() == null) return false; // if type2 is the current class and there is no super class
+        //if (symbolTable.getSuper() == null ) return true;
+        //return (type1.getName().equals(symbolTable.getClassName()) && symbolTable.getSuper().equals(type2.getName())); // checks if type1 extends type2
+        if (type1.getName().equals(symbolTable.getClassName()) && type2.getName().equals(symbolTable.getSuper()) && symbolTable.isClassImported(symbolTable.getSuper())) return true;
+        if (type2.getName().equals(symbolTable.getClassName()) && type1.getName().equals(symbolTable.getSuper()) && symbolTable.isClassImported(symbolTable.getSuper())) return true;
+        if (!type1.getName().equals(symbolTable.getClassName()) && !type2.getName().equals(symbolTable.getClassName()) && symbolTable.isClassImported(type1.getName()) && symbolTable.isClassImported(type2.getName())) return true;
+        return false;
     }
 
 }
