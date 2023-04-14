@@ -35,80 +35,48 @@ public class UndeclaredMethodCheck extends PreorderJmmVisitor<Integer, Integer> 
 
         String methodName = jmmNode.get("caller");
         String superClass = symbolTable.getSuper();
+        Type returnType = symbolTable.getReturnType(methodName);
+        if (returnType == null && symbolTable.getSuper() != null || returnType == null && !symbolTable.getImports().isEmpty()) {
+            return 1;
+        }
+        else if (returnType == null && jmmNode.getJmmChild(0).getKind().equals("This")) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Method " + methodName + " is not declared"));
+            return 0;
+        }
+        else if (returnType == null && symbolTable.getSuper() == null && symbolTable.getImports().isEmpty()) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Method " + methodName + " is not declared"));
+            return 0;
+        }
 
+        /*
         if (symbolTable.getMethods().contains(methodName)) {
             return 1;
         }
 
-        // check child nodes, if kind is Arguments we dont care about it
-        for (JmmNode child : jmmNode.getChildren()) {
-            if (child.getKind().equals("Arguments")) {
-                continue;
+        Type left = AnalysisUtils.getType(jmmNode.getChildren().get(0), symbolTable);
+        if (symbolTable.isVarClass(left.getName())) {
+            if (left.getName().equals(symbolTable.getClassName())) {
+                if (!symbolTable.getMethods().contains(methodName)) {
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Method " + methodName + " is not declared"));
+                }
+            } else if (left.getName().equals(superClass)) {
+                if (!symbolTable.isClassImported(superClass)) {
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Method " + methodName + " is not declared"));
+                }
+            } else {
+                if (!symbolTable.isClassImported(left.getName())) {
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Method " + methodName + " is not declared"));
+                }
             }
-            // if kind equals id
-
+        }
+*/
             // vou ver À symbol table se a variável é uma classe
             // se for uma classe, vou ver se é a class que estou a ver
             // se for a classe que estou a ver, verifico se ela tem o método que foi chamado
             // se nao for a classe que estou a ver, verifico se ela é a super classe e se essa super classe está importada
             // ou se nao for super classe, verifico se a classe está importada
             // se a classe não estiver importada, reporto erro
-            if (child.getKind().equals("Id")) {
-                Type varType = symbolTable.getVarType(child.get("name"));
-                if (!varType.getName().equals("unknown") ) {
-                    if (symbolTable.isVarClass(child.get("name"))) {
-                        if (varType.getName().equals(symbolTable.getClassName())) {
-                            if (!symbolTable.getMethods().contains(methodName)) {
-                                if (superClass != null) {
-                                    if (!symbolTable.isClassImported(superClass)) {
-                                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), Integer.parseInt(jmmNode.get("colStart")), "Method " + methodName + " not declared because " + superClass + " is not imported"));
-                                    }
-                                } else {
-                                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), Integer.parseInt(jmmNode.get("colStart")), "Method " + methodName + " not declared"));
-                                }
-                            }
-                        }
-                        else {
-                            if (varType.getName().equals(superClass)) {
-                                if (!symbolTable.isClassImported(superClass)) {
-                                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), Integer.parseInt(jmmNode.get("colStart")), "Method " + methodName + " not declared because " + superClass + " is not imported"));
-                                }
-                            }
-                            else {
-                                if (!symbolTable.isClassImported(varType.getName())) {
-                                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), Integer.parseInt(jmmNode.get("colStart")), "Method " + methodName + " not declared because " + varType.getName() + " is not imported"));
-                                }
-                            }
-                        }
 
-                    }
-                    else {
-                        // var is not class
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), Integer.parseInt(jmmNode.get("colStart")), "Method " + methodName + " not declared"));
-
-                    }
-                }
-            }
-            else if (child.getKind().equals("This")){
-                if (!symbolTable.getMethods().contains(methodName)) {
-                    if (superClass != null) {
-                        if (!symbolTable.isClassImported(superClass)) {
-                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), Integer.parseInt(jmmNode.get("colStart")), "Method " + methodName + " not declared because " + superClass + " is not imported"));
-                        }
-                    } else {
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), Integer.parseInt(jmmNode.get("colStart")), "Method " + methodName + " not declared"));
-                    }
-                }
-            }
-            else if (child.getKind().equals("BinaryOp") || child.getKind().equals("BooleanOp") || child.getKind().equals("BoolLiteral") ||
-                    child.getKind().equals("IntLiteral") || child.getKind().equals("Not") || child.getKind().equals("ArrayLength") ||
-                    child.getKind().equals("ArrayAccess") || child.getKind().equals("NewIntArray") || child.getKind().equals("NewObject")) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), Integer.parseInt(jmmNode.get("colStart")), "Method " + methodName + " not declared"));
-            }
-            else if (child.getKind().equals("MethodCall")) {
-                visitMethod(child, ret);
-            }
-        }
 
         return 1;
     }
