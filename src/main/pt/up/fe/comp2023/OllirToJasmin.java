@@ -3,6 +3,7 @@ package pt.up.fe.comp2023;
 import org.specs.comp.ollir.AccessModifiers;
 import org.specs.comp.ollir.ClassUnit;
 import org.specs.comp.ollir.Field;
+import org.specs.comp.ollir.Method;
 
 public class OllirToJasmin {
 
@@ -41,6 +42,11 @@ public class OllirToJasmin {
         jasminCode.append(".end method\n\n");
 
         // Methods
+        for(Method method : classUnit.getMethods()){
+            jasminCode.append(buildMethod(method)).append("\n");
+        }
+
+        // Methods
         return jasminCode.toString();
     }
 
@@ -57,6 +63,23 @@ public class OllirToJasmin {
             jasminCode.append("final ");
 
         jasminCode.append(field.getFieldName()).append(" ").append(JasminUtils.getJasminType(field.getFieldType())).append("\n");
+        return jasminCode.toString();
+    }
+
+    public String buildMethod(Method method){
+        StringBuilder jasminCode = new StringBuilder();
+
+        jasminCode.append(".method ");
+        AccessModifiers accessModifier = method.getMethodAccessModifier();
+        if(accessModifier != AccessModifiers.DEFAULT){
+            jasminCode.append(accessModifier.name().toLowerCase()).append(" ");
+        }
+        if(method.isStaticMethod())
+            jasminCode.append("static ");
+        if(method.isFinalMethod())
+            jasminCode.append("final ");
+
+        jasminCode.append(method.getMethodName()).append(" ").append(JasminUtils.getJasminType(method.getReturnType())).append("\n");
         return jasminCode.toString();
     }
 }
