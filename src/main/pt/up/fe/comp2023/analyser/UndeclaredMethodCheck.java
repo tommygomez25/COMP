@@ -41,8 +41,10 @@ public class UndeclaredMethodCheck extends PreorderJmmVisitor<Integer, Integer> 
         if (className.equals(symbolTable.getClassName())) {
             if (symbolTable.getMethods().contains(methodName)) {
                 List<Symbol> methodParams = symbolTable.getParameters(methodName);
+                int methodParamsSize = 0;
+                if (methodParams != null) methodParamsSize = methodParams.size();
                 JmmNode argumentsNode = jmmNode.getJmmChild(1);
-                if (methodParams.size() != argumentsNode.getNumChildren()) {
+                if (methodParamsSize != argumentsNode.getNumChildren()) {
                     reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Method " + methodName + " has " + methodParams.size() + " parameters"));
                 } else {
                     for (int i = 0; i < argumentsNode.getNumChildren(); i++) {
