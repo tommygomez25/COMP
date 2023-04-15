@@ -254,6 +254,13 @@ class MySymbolTable implements SymbolTable {
             }
         }
 
+        // check if it is in imports
+        for (String imp : imports) {
+            if (imp.endsWith(name)) {
+                return new Symbol(new Type(name,false),name);
+            }
+        }
+
         return new Symbol(new Type("unknown",false),name);
     }
 
