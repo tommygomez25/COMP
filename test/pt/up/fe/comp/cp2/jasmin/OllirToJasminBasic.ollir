@@ -5,7 +5,6 @@ SymbolTable extends Quicksort {
 
 	.field public intField.i32;
 	.field public boolField.bool;
-	.field public obj.Object;
 
 	.construct SymbolTable().V {
 		invokespecial(this, "<init>").V;
