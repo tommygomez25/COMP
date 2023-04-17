@@ -1,9 +1,6 @@
 package pt.up.fe.comp2023;
 
-import org.specs.comp.ollir.ArrayType;
-import org.specs.comp.ollir.ClassType;
-import org.specs.comp.ollir.ElementType;
-import org.specs.comp.ollir.Type;
+import org.specs.comp.ollir.*;
 import pt.up.fe.specs.util.exceptions.NotImplementedException;
 
 public class JasminUtils {
@@ -22,6 +19,21 @@ public class JasminUtils {
             case BOOLEAN -> "Z";
             default -> throw new NotImplementedException("Type " + type + " not implemented");
         };
+    }
+
+    public static String getQualifiedName(ClassUnit classUnit, String className){
+        for(String importName : classUnit.getImports()){
+            var split = importName.split("\\.");
+            String last;
+            if(split.length >= 1)
+                last = split[split.length - 1];
+            else
+                last = importName;
+            if(last.equals(className)){
+                return importName.replace(".", "/");
+            }
+        }
+        return classUnit.getClassName().replace(".", "/");
     }
 }
 

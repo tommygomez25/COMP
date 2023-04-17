@@ -1,9 +1,8 @@
 package pt.up.fe.comp2023;
 
-import org.specs.comp.ollir.AccessModifiers;
-import org.specs.comp.ollir.ClassUnit;
-import org.specs.comp.ollir.Field;
-import org.specs.comp.ollir.Method;
+import org.specs.comp.ollir.*;
+
+import java.util.ArrayList;
 
 public class OllirToJasmin {
 
@@ -33,9 +32,6 @@ public class OllirToJasmin {
         jasminCode.append("\n");
 
         // Init
-        jasminCode.append(";\n");
-        jasminCode.append("; standard initializer\n");
-        jasminCode.append(";\n");
         jasminCode.append(".method public <init>()V\n");
         jasminCode.append("\taload_0\n");
         jasminCode.append("\tinvokenonvirtual ").append(this.superClass).append("/<init>()V\n");
@@ -101,9 +97,22 @@ public class OllirToJasmin {
             jasminCode.append("\t.limit locals 99\n");
         }
 
-        MethodInstructionBuilder methodInstructionBuilder = new MethodInstructionBuilder(method);
+        MethodInstructionBuilder methodInstructionBuilder = new MethodInstructionBuilder(method, this.superClass);
 
+        ArrayList<Instruction> instructions = method.getInstructions();
 
+        for(Instruction instruction : instructions){
+            jasminCode.append(methodInstructionBuilder.buildInstruction(instruction));
+            if(instruction.getInstType() == InstructionType.CALL){
+                ElementType retType = ((CallInstruction) instruction).getReturnType().getTypeOfElement();
+                CallType callType = ((CallInstruction) instruction).getInvocationType();
+                if(!method.isConstructMethod() && (retType != ElementType.VOID || callType != CallType.invokespecial)){
+                    jasminCode.append(JasminInstruction.instPop());
+                }
+            }
+        }
+
+        jasminCode.append(".end method\n");
 
         return jasminCode.toString();
     }
