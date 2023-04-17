@@ -52,7 +52,7 @@ public class OllirToJasmin {
         if(field.isFinalField())
             jasminCode.append("final ");
 
-        jasminCode.append(field.getFieldName()).append(" ").append(JasminUtils.getJasminType(field.getFieldType())).append("\n");
+        jasminCode.append(field.getFieldName()).append(" ").append(JasminUtils.getJasminType(field.getFieldType(), this.classUnit)).append("\n");
 
         return jasminCode.toString();
     }
@@ -77,12 +77,12 @@ public class OllirToJasmin {
 
 
         String params = method.getParams().stream()
-                .map(param -> JasminUtils.getJasminType(param.getType()))
+                .map(param -> JasminUtils.getJasminType(param.getType(), this.classUnit))
                 .reduce("", (a, b) -> a + b);
 
         jasminCode.append(params).append(")");
 
-        jasminCode.append(JasminUtils.getJasminType(method.getReturnType())).append("\n");
+        jasminCode.append(JasminUtils.getJasminType(method.getReturnType(), this.classUnit)).append("\n");
 
         // method body
         if(accessModifier != AccessModifiers.DEFAULT) {

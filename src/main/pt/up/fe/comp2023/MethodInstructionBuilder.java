@@ -116,7 +116,7 @@ public class MethodInstructionBuilder {
             }
         }
         else if(instruction.getInvocationType() == CallType.invokestatic){
-            String retType = JasminUtils.getJasminType(instruction.getReturnType());
+            String retType = JasminUtils.getJasminType(instruction.getReturnType(), method.getOllirClass());
             ArrayList<Element> params = instruction.getListOfOperands();
             StringBuilder paramsTypes = new StringBuilder();
             LiteralElement litElem = (LiteralElement) instruction.getSecondArg();
@@ -124,7 +124,7 @@ public class MethodInstructionBuilder {
             Operand firstOp = (Operand) instruction.getFirstArg();
             for(Element param : params){
                 jasminCode.append(loadElement(param));
-                paramsTypes.append(JasminUtils.getJasminType(param.getType().getTypeOfElement()));
+                paramsTypes.append(JasminUtils.getJasminType(param.getType(), method.getOllirClass()));
             }
             String firstOpName = firstOp.getName();
             String className = JasminUtils.getQualifiedName(method.getOllirClass(), firstOpName);
@@ -138,7 +138,7 @@ public class MethodInstructionBuilder {
                 jasminCode.append("\treturn\n");
             }
             else{
-                String retType = JasminUtils.getJasminType(instruction.getReturnType());
+                String retType = JasminUtils.getJasminType(instruction.getReturnType(), method.getOllirClass());
                 ArrayList<Element> params = instruction.getListOfOperands();
                 StringBuilder paramsTypes = new StringBuilder();
                 LiteralElement litElem = (LiteralElement) instruction.getSecondArg();
@@ -147,7 +147,7 @@ public class MethodInstructionBuilder {
                 jasminCode.append(loadElement(instruction.getFirstArg()));
                 for(Element param : params){
                     jasminCode.append(loadElement(param));
-                    paramsTypes.append(JasminUtils.getJasminType(param.getType().getTypeOfElement()));
+                    paramsTypes.append(JasminUtils.getJasminType(param.getType(), method.getOllirClass()));
                 }
                 ClassType classType = (ClassType) instruction.getFirstArg().getType();
                 String className = JasminUtils.getQualifiedName(method.getOllirClass(), classType.getName());
@@ -220,7 +220,7 @@ public class MethodInstructionBuilder {
         Operand fieldOp = (Operand) fieldElement;
         String fieldName = fieldOp.getName();
         String className = JasminUtils.getQualifiedName(method.getOllirClass(), ((ClassType) classElement.getType()).getName());
-        String fieldType = JasminUtils.getJasminType(fieldElement.getType().getTypeOfElement());
+        String fieldType = JasminUtils.getJasminType(fieldElement.getType(), method.getOllirClass());
         if(type == InstructionType.GETFIELD){
             jasminCode.append(JasminInstruction.instGetfield(className, fieldName, fieldType));
         }
