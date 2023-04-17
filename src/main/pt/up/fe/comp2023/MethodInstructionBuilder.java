@@ -99,13 +99,7 @@ public class MethodInstructionBuilder {
     public String buildCallInstruction(CallInstruction instruction){
         StringBuilder jasminCode = new StringBuilder();
 
-        String retType = JasminUtils.getJasminType(instruction.getReturnType());
-        ArrayList<Element> params = instruction.getListOfOperands();
-        StringBuilder paramsTypes = new StringBuilder();
-        for(Element param : params){
-            jasminCode.append(loadElement(param));
-            paramsTypes.append(JasminUtils.getJasminType(param.getType().getTypeOfElement()));
-        }
+
 
         if(instruction.getInvocationType() == CallType.arraylength){
             jasminCode.append(instruction.getFirstArg()).append(JasminInstruction.instArraylength());
@@ -122,9 +116,16 @@ public class MethodInstructionBuilder {
             }
         }
         else if(instruction.getInvocationType() == CallType.invokestatic){
+            String retType = JasminUtils.getJasminType(instruction.getReturnType());
+            ArrayList<Element> params = instruction.getListOfOperands();
+            StringBuilder paramsTypes = new StringBuilder();
             LiteralElement litElem = (LiteralElement) instruction.getSecondArg();
             String methodName = litElem.getLiteral().replace("\"", "");
             Operand firstOp = (Operand) instruction.getFirstArg();
+            for(Element param : params){
+                jasminCode.append(loadElement(param));
+                paramsTypes.append(JasminUtils.getJasminType(param.getType().getTypeOfElement()));
+            }
             String firstOpName = firstOp.getName();
             String className = JasminUtils.getQualifiedName(method.getOllirClass(), firstOpName);
             jasminCode.append(JasminInstruction.instInvokestatic(className, methodName, retType, paramsTypes.toString()));
@@ -137,10 +138,17 @@ public class MethodInstructionBuilder {
                 jasminCode.append("\treturn\n");
             }
             else{
+                String retType = JasminUtils.getJasminType(instruction.getReturnType());
+                ArrayList<Element> params = instruction.getListOfOperands();
+                StringBuilder paramsTypes = new StringBuilder();
                 LiteralElement litElem = (LiteralElement) instruction.getSecondArg();
                 String methodName = litElem.getLiteral().replace("\"", "");
                 CallType callType = instruction.getInvocationType();
                 jasminCode.append(loadElement(instruction.getFirstArg()));
+                for(Element param : params){
+                    jasminCode.append(loadElement(param));
+                    paramsTypes.append(JasminUtils.getJasminType(param.getType().getTypeOfElement()));
+                }
                 ClassType classType = (ClassType) instruction.getFirstArg().getType();
                 String className = JasminUtils.getQualifiedName(method.getOllirClass(), classType.getName());
                 if(callType == CallType.invokespecial){
@@ -242,7 +250,7 @@ public class MethodInstructionBuilder {
                 Descriptor descriptor = method.getVarTable().get(((Operand) element).getName());
                 ElementType varType = descriptor.getVarType().getTypeOfElement();
                 if (varType == ElementType.ARRAYREF) {
-                    return getArray(element) + value + JasminInstruction.instAstore(register);
+                    return getArray(element) + value + JasminInstruction.instIastore();
                 }
                 return value + JasminInstruction.instIstore(register);
             }
@@ -265,7 +273,7 @@ public class MethodInstructionBuilder {
                 Descriptor descriptor = method.getVarTable().get(((Operand) element).getName());
                 ElementType varType = descriptor.getVarType().getTypeOfElement();
                 if (varType == ElementType.ARRAYREF) {
-                    return getArray(element) + JasminInstruction.instAload(register);
+                    return getArray(element) + JasminInstruction.instIaload();
                 }
                 return JasminInstruction.instIload(register);
             }

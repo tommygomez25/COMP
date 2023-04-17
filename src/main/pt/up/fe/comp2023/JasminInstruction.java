@@ -34,6 +34,10 @@ public class JasminInstruction {
         return instructionRegister("istore", register);
     }
 
+    public static String instIaload(){ return "\tiaload\n"; }
+
+    public static String instIastore(){ return "\tiastore\n"; }
+
     public static String instIconst(int register) {
         if(register == -1){
             return "\ticonst_m1\n";
