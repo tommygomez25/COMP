@@ -50,8 +50,6 @@ public class JasminInstruction {
         else {
             return "\tldc " + register + "\n";
         }
-
-
     }
 
     public static String instIreturn() { return "\tireturn\n"; }

@@ -31,13 +31,6 @@ public class OllirToJasmin {
         }
         jasminCode.append("\n");
 
-        // Init
-        jasminCode.append(".method public <init>()V\n");
-        jasminCode.append("\taload_0\n");
-        jasminCode.append("\tinvokenonvirtual ").append(this.superClass).append("/<init>()V\n");
-        jasminCode.append("\treturn\n");
-        jasminCode.append(".end method\n\n");
-
         // Methods
         for(Method method : classUnit.getMethods()){
             jasminCode.append(buildMethod(method)).append("\n");
