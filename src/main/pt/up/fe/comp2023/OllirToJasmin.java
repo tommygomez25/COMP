@@ -99,7 +99,7 @@ public class OllirToJasmin {
             if(instruction.getInstType() == InstructionType.CALL){
                 ElementType retType = ((CallInstruction) instruction).getReturnType().getTypeOfElement();
                 CallType callType = ((CallInstruction) instruction).getInvocationType();
-                if(!method.isConstructMethod() && (retType != ElementType.VOID || callType != CallType.invokespecial)){
+                if(!method.isConstructMethod() && (retType != ElementType.VOID || callType == CallType.invokespecial)){
                     jasminCode.append(JasminInstruction.instPop());
                 }
             }
