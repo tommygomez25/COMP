@@ -4,6 +4,7 @@ import org.specs.comp.ollir.ArrayType;
 import org.specs.comp.ollir.ClassType;
 import org.specs.comp.ollir.ElementType;
 import org.specs.comp.ollir.Type;
+import pt.up.fe.specs.util.exceptions.NotImplementedException;
 
 public class JasminUtils {
     public static String getJasminType(Type type){
@@ -19,7 +20,7 @@ public class JasminUtils {
             case STRING -> "Ljava/lang/String;";
             case VOID -> "V";
             case BOOLEAN -> "Z";
-            default -> "Error";
+            default -> throw new NotImplementedException("Type " + type + " not implemented");
         };
     }
 }

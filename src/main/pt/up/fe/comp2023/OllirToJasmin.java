@@ -8,6 +8,7 @@ import org.specs.comp.ollir.Method;
 public class OllirToJasmin {
 
     private final ClassUnit classUnit;
+    public String superClass;
 
     public OllirToJasmin(ClassUnit classUnit) {
         this.classUnit = classUnit;
@@ -21,9 +22,9 @@ public class OllirToJasmin {
         jasminCode.append(".class public ").append(classUnit.getClassName()).append("\n");
 
         // Super Class Name
-        String superClass = classUnit.getSuperClass();
-        superClass = superClass == null ? "java/lang/Object" : superClass;
-        jasminCode.append(".super ").append(superClass).append("\n\n");
+        this.superClass = classUnit.getSuperClass();
+        this.superClass = this.superClass == null ? "java/lang/Object" : this.superClass;
+        jasminCode.append(".super ").append(this.superClass).append("\n\n");
 
         // Fields
         for(Field field : classUnit.getFields()){
@@ -37,7 +38,7 @@ public class OllirToJasmin {
         jasminCode.append(";\n");
         jasminCode.append(".method public <init>()V\n");
         jasminCode.append("\taload_0\n");
-        jasminCode.append("\tinvokenonvirtual ").append(superClass).append("/<init>()V\n");
+        jasminCode.append("\tinvokenonvirtual ").append(this.superClass).append("/<init>()V\n");
         jasminCode.append("\treturn\n");
         jasminCode.append(".end method\n\n");
 
@@ -63,6 +64,7 @@ public class OllirToJasmin {
             jasminCode.append("final ");
 
         jasminCode.append(field.getFieldName()).append(" ").append(JasminUtils.getJasminType(field.getFieldType())).append("\n");
+
         return jasminCode.toString();
     }
 
@@ -73,13 +75,36 @@ public class OllirToJasmin {
         AccessModifiers accessModifier = method.getMethodAccessModifier();
         if(accessModifier != AccessModifiers.DEFAULT){
             jasminCode.append(accessModifier.name().toLowerCase()).append(" ");
+            if(method.isStaticMethod())
+                jasminCode.append("static ");
+            if(method.isFinalMethod())
+                jasminCode.append("final ");
+            jasminCode.append(method.getMethodName()).append("(");
         }
-        if(method.isStaticMethod())
-            jasminCode.append("static ");
-        if(method.isFinalMethod())
-            jasminCode.append("final ");
+        else{
+            jasminCode.append("public <init>(");
 
-        jasminCode.append(method.getMethodName()).append(" ").append(JasminUtils.getJasminType(method.getReturnType())).append("\n");
+        }
+
+
+        String params = method.getParams().stream()
+                .map(param -> JasminUtils.getJasminType(param.getType()))
+                .reduce("", (a, b) -> a + b);
+
+        jasminCode.append(params).append(")");
+
+        jasminCode.append(JasminUtils.getJasminType(method.getReturnType())).append("\n");
+
+        // method body
+        if(accessModifier != AccessModifiers.DEFAULT) {
+            jasminCode.append("\t.limit stack 99\n");
+            jasminCode.append("\t.limit locals 99\n");
+        }
+
+        MethodInstructionBuilder methodInstructionBuilder = new MethodInstructionBuilder(method);
+
+
+
         return jasminCode.toString();
     }
 }
