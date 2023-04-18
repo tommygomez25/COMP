@@ -49,7 +49,14 @@ public class AnalysisUtils {
             }
             case "Id" -> {
                 String varName = node.get("name");
-                Symbol varSymbol = symbolTable.findField(varName);
+                if (node.getAncestor("Method").isEmpty()) {
+                    Symbol varSymbol = symbolTable.findField(varName);
+                    if (varSymbol.getType().getName().equals("unknown"))
+                        return new Type("unknown",false);
+                    return varSymbol.getType();
+                }
+
+                Symbol varSymbol = symbolTable.findFieldMethod(varName,node.getAncestor("Method").get().get("methodName"));
                 if (varSymbol.getType().getName().equals("unknown"))
                     return new Type("unknown",false);
                 return varSymbol.getType();
@@ -78,7 +85,9 @@ public class AnalysisUtils {
             }
             case "Id" -> {
                 String varName = node.get("name");
-                return symbolTable.findField(varName);
+                if (node.getAncestor("Method").isEmpty()) return symbolTable.findField(varName);
+
+                return symbolTable.findFieldMethod(varName,node.getAncestor("Method").get().get("methodName"));
             }
             case "This" -> {
                 Type type = new Type(symbolTable.getClassName(), false);

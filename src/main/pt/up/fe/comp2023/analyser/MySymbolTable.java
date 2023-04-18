@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class MySymbolTable implements SymbolTable {
+public class MySymbolTable implements SymbolTable {
     private String className = null;
     private String superName = null;
     private List<String> imports = new ArrayList<>();
@@ -194,21 +194,22 @@ class MySymbolTable implements SymbolTable {
     }
 
     public boolean isVarDeclared(String varName) {
-        for (Symbol field : fields) {
-            if (field.getName().equals(varName)) {
-                return true;
-            }
-        }
         for (String method : methods) {
+            for (Symbol localVariable : methodLocalVariables.get(method)) {
+                if (localVariable.getName().equals(varName)) {
+                    return true;
+                }
+            }
             for (Symbol parameter : methodParameters.get(method)) {
                 if (parameter.getName().equals(varName)) {
                     return true;
                 }
             }
-            for (Symbol localVariable : methodLocalVariables.get(method)) {
-                if (localVariable.getName().equals(varName)) {
-                    return true;
-                }
+        }
+
+        for (Symbol field : fields) {
+            if (field.getName().equals(varName)) {
+                return true;
             }
         }
 
@@ -230,11 +231,6 @@ class MySymbolTable implements SymbolTable {
     }
 
     public Symbol findField(String name){
-        for(Symbol field : fields){
-            if(field.getName().equals(name)){
-                return field;
-            }
-        }
 
         // iterate method local variables
         for(String method : methods){
@@ -254,6 +250,51 @@ class MySymbolTable implements SymbolTable {
             }
         }
 
+        for(Symbol field : fields){
+            if(field.getName().equals(name)){
+                return field;
+            }
+        }
+
+        // check if it is in imports
+        for (String imp : imports) {
+            if (imp.endsWith(name)) {
+                return new Symbol(new Type(name,false),name);
+            }
+        }
+
+        return new Symbol(new Type("unknown",false),name);
+    }
+
+    public Symbol findFieldMethod(String name,String methodName){
+
+        // iterate method local variables
+        for(String method : methods){
+            for(Symbol localVariable : methodLocalVariables.get(method)){
+                if(localVariable.getName().equals(name)){
+                    return localVariable;
+                }
+            }
+        }
+
+        // iterate method parameters
+        for(String method : methods){
+            if (method.equals(methodName)) {
+                for(Symbol parameter : methodParameters.get(method)){
+                    if(parameter.getName().equals(name)){
+                        return parameter;
+                    }
+                }
+            }
+
+        }
+
+        for(Symbol field : fields){
+            if(field.getName().equals(name)){
+                return field;
+            }
+        }
+
         // check if it is in imports
         for (String imp : imports) {
             if (imp.endsWith(name)) {
@@ -265,28 +306,31 @@ class MySymbolTable implements SymbolTable {
     }
 
     public Type getVarType(String varName) {
-        // check if it is in imports
-        for (String imp : imports) {
-            if (imp.endsWith(varName)) {
-                return new Type(varName,false);
+
+        for (String method : methods) {
+            for (Symbol localVariable : methodLocalVariables.get(method)) {
+                if (localVariable.getName().equals(varName)) {
+                    return localVariable.getType();
+                }
+            }
+            for (Symbol parameter : methodParameters.get(method)) {
+                if (parameter.getName().equals(varName)) {
+                    return parameter.getType();
+                }
             }
         }
+
 
         for (Symbol field : fields) {
             if (field.getName().equals(varName)) {
                 return field.getType();
             }
         }
-        for (String method : methods) {
-            for (Symbol parameter : methodParameters.get(method)) {
-                if (parameter.getName().equals(varName)) {
-                    return parameter.getType();
-                }
-            }
-            for (Symbol localVariable : methodLocalVariables.get(method)) {
-                if (localVariable.getName().equals(varName)) {
-                    return localVariable.getType();
-                }
+
+        // check if it is in imports
+        for (String imp : imports) {
+            if (imp.endsWith(varName)) {
+                return new Type(varName,false);
             }
         }
 
@@ -303,11 +347,24 @@ class MySymbolTable implements SymbolTable {
     }
 
     public boolean isVarClass(String varName) {
-        // check if varName is in the imports
-        for (String imp : imports) {
-            if (imp.endsWith(varName)) {
-                return true;
+
+        // check if varName is a method parameter
+        for (String method : methods) {
+
+            for (Symbol localVariable : methodLocalVariables.get(method)) {
+                if (localVariable.getName().equals(varName)) {
+                    if (Character.isUpperCase(localVariable.getType().getName().charAt(0)))
+                        return true;
+                }
             }
+
+            for (Symbol parameter : methodParameters.get(method)) {
+                if (parameter.getName().equals(varName)) {
+                    if (Character.isUpperCase(parameter.getType().getName().charAt(0)))
+                        return true;
+                }
+            }
+
         }
 
         // check if varName is declared in the class
@@ -318,20 +375,10 @@ class MySymbolTable implements SymbolTable {
             }
         }
 
-        // check if varName is a method parameter
-        for (String method : methods) {
-            for (Symbol parameter : methodParameters.get(method)) {
-                if (parameter.getName().equals(varName)) {
-                    if (Character.isUpperCase(parameter.getType().getName().charAt(0)))
-                        return true;
-                }
-            }
-
-            for (Symbol localVariable : methodLocalVariables.get(method)) {
-                if (localVariable.getName().equals(varName)) {
-                    if (Character.isUpperCase(localVariable.getType().getName().charAt(0)))
-                        return true;
-                }
+        // check if varName is in the imports
+        for (String imp : imports) {
+            if (imp.endsWith(varName)) {
+                return true;
             }
         }
 

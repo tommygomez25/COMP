@@ -32,7 +32,9 @@ public class AssignmentCheck extends PreorderJmmVisitor<Integer, Integer> {
 
         Type leftType = symbolTable.getVarType(node.get("varName"));
         Type rightType = AnalysisUtils.getType(right,symbolTable);
-
+        if (rightType == null) {
+            return 0;
+        }
         if (!AnalysisUtils.typeIsCompatibleWith(leftType,rightType,symbolTable)) {
             reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot assign " + rightType.getName() + " to " + leftType.getName()));
             return 0;

@@ -37,6 +37,8 @@ public class ReturnTypeCheck extends PreorderJmmVisitor<Integer,Integer> {
         JmmNode returnNode = node.getJmmChild(node.getNumChildren()-1);
 
         Type returnNodeType = AnalysisUtils.getType(returnNode.getJmmChild(0), symbolTable);
+        if (returnNodeType == null) return 0;
+
         Symbol returnNodeSymbol = AnalysisUtils.getSymbol(returnNode.getJmmChild(0), symbolTable);
         if (!returnType.equals(returnNodeType)) {
             if (symbolTable.isVarClass(returnNodeSymbol.getName())) {
