@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class MySymbolTable implements SymbolTable {
+public class MySymbolTable implements SymbolTable {
     private String className = null;
     private String superName = null;
     private List<String> imports = new ArrayList<>();
