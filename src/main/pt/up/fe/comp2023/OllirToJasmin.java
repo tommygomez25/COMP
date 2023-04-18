@@ -36,7 +36,6 @@ public class OllirToJasmin {
             jasminCode.append(buildMethod(method)).append("\n");
         }
 
-        // Methods
         return jasminCode.toString();
     }
 
@@ -72,7 +71,6 @@ public class OllirToJasmin {
         }
         else{
             jasminCode.append("public <init>(");
-
         }
 
 

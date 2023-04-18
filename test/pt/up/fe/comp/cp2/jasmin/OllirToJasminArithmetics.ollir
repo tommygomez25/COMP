@@ -1,5 +1,7 @@
 Test {
 
+    .field public myArray.array.array.i32;
+
 	.construct Test().V {
 		invokespecial(this, "<init>").V;
 	}
