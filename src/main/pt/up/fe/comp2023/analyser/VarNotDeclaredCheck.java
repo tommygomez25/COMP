@@ -9,6 +9,7 @@ import pt.up.fe.comp.jmm.report.ReportType;
 import pt.up.fe.comp.jmm.report.Stage;
 
 import java.util.List;
+import java.util.Optional;
 
 public class VarNotDeclaredCheck extends PreorderJmmVisitor<Integer, Integer> {
 
@@ -37,6 +38,16 @@ public class VarNotDeclaredCheck extends PreorderJmmVisitor<Integer, Integer> {
         if (!symbolTable.isVarDeclared(varName)) {
             reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Variable " + varName + " not declared"));
             return 0;
+        }
+        Optional<JmmNode> methodNameNode = node.getAncestor("Method");
+        if (methodNameNode.isPresent()) {
+            String methodName = methodNameNode.get().get("methodName");
+            if (methodName.equals("main")) {
+                if (symbolTable.getFields().contains(varName)) {
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Variable " + varName + " not declared"));
+                    return 0;
+                }
+            }
         }
 
     return 1;
