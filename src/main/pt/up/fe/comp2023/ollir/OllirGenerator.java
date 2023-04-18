@@ -1,13 +1,13 @@
 package pt.up.fe.comp2023.ollir;
 
-import org.specs.comp.ollir.Ollir;
-import org.stringtemplate.v4.ST;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2023.analyser.MySymbolTable;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Arrays;
 
@@ -35,7 +35,65 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         addVisit("IntLiteral", (node, jef) -> Arrays.asList(String.format("%s.i32",node.get("var")), "i32") );
         addVisit("BoolLiteral", (node,jef) -> Arrays.asList(String.format("%s.bool",node.get("var")), "bool") );
         addVisit("Id", this::visitIdentifier);
+        addVisit("Expr", this::visitExpression);
+        addVisit("MethodCall", this::visitMethodCall);
+        addVisit("NewObject", this::visitNewObject);
         setDefaultVisit((node,jef)-> null);
+    }
+
+    private List<String> visitNewObject(JmmNode node, String s) {
+
+        String className = node.get("name");
+
+        String var = node.getJmmParent().get("varName");
+
+        ollirCode.append(String.format("%s.%s :=.%s new(%s).%s;\n",var,className,className,className,className));
+        ollirCode.append(String.format("invokespecial(%s.%s, \"<init>\").V;\n",var,className));
+
+        return null;
+    }
+
+    private List<String> visitMethodCall(JmmNode node, String s) {
+
+        //Multiple options (static method)
+        // inside each option : with or without args
+
+        //static
+        if (node.getJmmChild(0).getKind().equals("Id")){
+            ollirCode.append(String.format("invokestatic(%s, \"%s\"",node.getJmmChild(0).get("name"),node.get("caller")));
+
+            List<String> args = exprArgs(node.getJmmChild(1)); //visit arguments node
+
+            if (!args.isEmpty()){
+                for (var arg : args){
+                    ollirCode.append(String.format(", %s",arg));
+                }
+            }
+
+            ollirCode.append(").V;");
+        }
+
+        return null;
+    }
+
+    private List<String> exprArgs(JmmNode node){
+
+        List<String> list = new ArrayList<>();
+
+        for(var child : node.getChildren()){
+            list.add(visit(child).get(0));
+        }
+
+        return list;
+    }
+
+    private List<String> visitExpression(JmmNode node, String s) {
+
+        for (var child : node.getChildren()){
+            visit(child);
+        }
+
+        return null;
     }
 
 
@@ -51,7 +109,7 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
 
     private List<String> classDeclarationVisit(JmmNode node, String jef){
         String extend = symbolTable.getSuper() != null ? String.format("extends %s",symbolTable.getSuper()) : "";
-        ollirCode.append(String.format("public %s %s", symbolTable.getClassName(),extend));
+        ollirCode.append(String.format("%s %s", symbolTable.getClassName(),extend));
         ollirCode.append("{\n");
 
         //private or public fields (accessType)
@@ -65,8 +123,8 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         }
 
         //constructor
-        ollirCode.append(String.format(".construct %s().V {\n",symbolTable.getClassName()));
-        ollirCode.append("\tinvokespecial(this, \"<init>\").V;\n" + "}\n");
+        ollirCode.append(String.format("\t.construct %s().V {\n",symbolTable.getClassName()));
+        ollirCode.append("\t\tinvokespecial(this, \"<init>\").V;\n" + "\t}\n");
 
         for (var child : node.getChildren()){
             visit(child);
@@ -86,9 +144,9 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
                     methodName,methodArgs(methodName),
                     OllirUtils.convertType(symbolTable.getReturnType(methodName))));
 
-            for (var child : node.getChildren()){
-                visit(child);
-            }
+        }
+        for (var child : node.getChildren()){
+            visit(child);
         }
 
 
@@ -113,6 +171,8 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
 
     private List<String> assignVisit(JmmNode node, String s) {
 
+        if (node.getJmmChild(0).getKind().equals("NewObject")) {return null;}
+
         String varName = node.get("varName");
 
         //String varType = fieldType(node.getJmmParent(),varName);
@@ -123,6 +183,9 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
 
         if (node.getJmmChild(0).getKind().equals("Id")){
             ollirCode.append(String.format("%s.%s :=.%s %s.%s;",varName, varType, varType,assignedVar,varType));
+        }
+        else if (node.getJmmChild(0).getKind().equals("NewObject")){
+            visit(node.getJmmChild(0));
         }
         else {
             ollirCode.append(String.format("%s.%s :=.%s %s;",varName,varType,varType,assignedVar));
@@ -135,10 +198,11 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
 
     private List<String> visitIdentifier(JmmNode node, String jef) {
         //either arg of function or created in function
-        String methodName = node.getJmmParent().getJmmParent().get("methodName");
-        String type = OllirUtils.convertType(symbolTable.getReturnType(methodName));;
+        String methodName = node.getAncestor("Method").get().get("methodName");
+        String type = OllirUtils.convertType(symbolTable.getReturnType(methodName));
+
         //arg of func
-        if (node.getJmmParent().getKind().equals("ReturnFromMethod")){
+        if (node.getJmmParent().getKind().equals("ReturnFromMethod") || node.getJmmParent().getKind().equals("Arguments")){
             return Arrays.asList(String.format("%s.%s",node.get("name"),type));
         }
         //2ndOne
@@ -157,6 +221,7 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         return null;
     }
 
+    //function parameters
     private String methodArgs(String methodName){
         List<Symbol> methodsList = symbolTable.getParameters(methodName);
 
