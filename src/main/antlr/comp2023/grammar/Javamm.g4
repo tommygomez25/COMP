@@ -50,14 +50,14 @@ expression
     : '(' expression ')' #Parenthesis
     | expression access #ArrayAccess
     | expression '.' 'length' #ArrayLength
+    | expression '.' caller=ID argum #MethodCall
     | '!' expression #Not
-    | 'new' 'int' '[' expression ']' #NewIntArray
-    | 'new' name= ID '(' ')' #NewObject
     | expression op=('*'|'/') expression #BinaryOp
     | expression op=('+'|'-') expression #BinaryOp
     | expression op='<' expression #BooleanOp
     | expression op='&&' expression #BooleanOp
-    | expression '.' caller=ID argum #MethodCall
+    | 'new' 'int' '[' expression ']' #NewIntArray
+    | 'new' name= ID '(' ')' #NewObject
     | var=INT #IntLiteral
     | var='true' #BoolLiteral
     | var='false' #BoolLiteral

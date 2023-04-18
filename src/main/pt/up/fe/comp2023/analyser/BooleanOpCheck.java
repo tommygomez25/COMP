@@ -32,7 +32,7 @@ public class BooleanOpCheck extends PreorderJmmVisitor<Integer,Integer> {
         }
 
         if (!leftType.getName().equals(rightType.getName())) {
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot apply operator" + op ));
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot apply operator " + op ));
             return 0;
         }
 
