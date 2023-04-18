@@ -32,7 +32,7 @@ public class BinaryOpCheck extends PreorderJmmVisitor<Integer,Integer> {
         }
 
         if (!leftType.equals(rightType)) {
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot apply operator" + op ));
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot apply operator " + op ));
             return 0;
         }
 

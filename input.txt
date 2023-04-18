@@ -1,18 +1,11 @@
+import io;
 
-class AssumeArguments {
-
-    public static void main(String[] args) {
-
-    }
-
-    public int bar() {
-        A a;
-        boolean b;
-
-        a = new A();
-        b = true;
-
-        return a.foo(b);
-    }
+class B {
+	int a;
+	public static void main(String[] args){
+		B b;
+		b = new B();
+		a = 2;
+		io.println(b);
+	}
 }
-
