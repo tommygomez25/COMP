@@ -19,3 +19,4 @@ class Other_Class_Method_Call_Simple {
     }
 
 }
+
