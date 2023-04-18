@@ -3,6 +3,7 @@ package pt.up.fe.comp2023.analyser;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
+import pt.up.fe.comp.jmm.ast.JmmNode;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -253,10 +254,24 @@ class MySymbolTable implements SymbolTable {
             }
         }
 
-        return null;
+        // check if it is in imports
+        for (String imp : imports) {
+            if (imp.endsWith(name)) {
+                return new Symbol(new Type(name,false),name);
+            }
+        }
+
+        return new Symbol(new Type("unknown",false),name);
     }
 
-    public Type getVarReturnType(String varName) {
+    public Type getVarType(String varName) {
+        // check if it is in imports
+        for (String imp : imports) {
+            if (imp.endsWith(varName)) {
+                return new Type(varName,false);
+            }
+        }
+
         for (Symbol field : fields) {
             if (field.getName().equals(varName)) {
                 return field.getType();
@@ -275,7 +290,7 @@ class MySymbolTable implements SymbolTable {
             }
         }
 
-        return null;
+        return new Type("unknown",false);
     }
 
     public boolean isClassImported(String className){
@@ -284,6 +299,42 @@ class MySymbolTable implements SymbolTable {
                 return true;
             }
         }
+        return false;
+    }
+
+    public boolean isVarClass(String varName) {
+        // check if varName is in the imports
+        for (String imp : imports) {
+            if (imp.endsWith(varName)) {
+                return true;
+            }
+        }
+
+        // check if varName is declared in the class
+        for (Symbol field : fields) {
+            if (field.getName().equals(varName)) {
+                if (Character.isUpperCase(field.getType().getName().charAt(0)))
+                    return true;
+            }
+        }
+
+        // check if varName is a method parameter
+        for (String method : methods) {
+            for (Symbol parameter : methodParameters.get(method)) {
+                if (parameter.getName().equals(varName)) {
+                    if (Character.isUpperCase(parameter.getType().getName().charAt(0)))
+                        return true;
+                }
+            }
+
+            for (Symbol localVariable : methodLocalVariables.get(method)) {
+                if (localVariable.getName().equals(varName)) {
+                    if (Character.isUpperCase(localVariable.getType().getName().charAt(0)))
+                        return true;
+                }
+            }
+        }
+
         return false;
     }
 

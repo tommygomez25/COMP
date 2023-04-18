@@ -1,8 +1,11 @@
 package pt.up.fe.comp2023.analyser;
 
+import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.PreorderJmmVisitor;
 import pt.up.fe.comp.jmm.report.Report;
+import pt.up.fe.comp.jmm.report.ReportType;
+import pt.up.fe.comp.jmm.report.Stage;
 
 import java.util.List;
 
@@ -13,19 +16,45 @@ public class BinaryOpCheck extends PreorderJmmVisitor<Integer,Integer> {
     public BinaryOpCheck(MySymbolTable symbolTable,List<Report> reports) {
         this.reports = reports;
         this.symbolTable = symbolTable;
-        addVisit("BinaryOp", this::visitBinaryOp);
         setDefaultVisit((node,oi)->0);
     }
 
     public Integer visitBinaryOp(JmmNode node, Integer arg) {
-        // get Ancestor of type Method
-        String method = node.getAncestor("Method").toString();
+        JmmNode left = node.getChildren().get(0);
+        JmmNode right = node.getChildren().get(1);
+        String op = node.get("op");
+
+        Type leftType = AnalysisUtils.getType(left,symbolTable);
+        Type rightType = AnalysisUtils.getType(right,symbolTable);
+
+        if (leftType.getName().equals("unknown") || rightType.getName().equals("unknown")) {
+            return 0;
+        }
+
+        if (!leftType.equals(rightType)) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot apply operator" + op ));
+            return 0;
+        }
+
+        if (AnalysisUtils.ARITHMETIC_OP.contains(op)) {
+            if (leftType.isArray() || rightType.isArray()) {
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot apply operator" + op + " to array"));
+                return 0;
+            }
+            if (!(leftType.getName().equals("int") && rightType.getName().equals("int"))) {
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Cannot apply operator" + op + " to " + leftType.getName()));
+                return 0;
+            }
+
+        }
+
+
         return 1;
     }
 
 
     @Override
     protected void buildVisitor() {
-
+        addVisit("BinaryOp", this::visitBinaryOp);
     }
 }

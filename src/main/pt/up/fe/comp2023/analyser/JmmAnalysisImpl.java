@@ -38,26 +38,35 @@ public class JmmAnalysisImpl implements JmmAnalysis {
             MySymbolTable mySymbolTable = new MySymbolTable();
             List<Report> symbolTableReports = new MySymbolTableVisitor().visit(rootNode, mySymbolTable);
 
-            var methodUndeclaredCheck = new UndeclaredMethodCheck(mySymbolTable,symbolTableReports);
-            methodUndeclaredCheck.visit(rootNode, null);
-
             var varNotDeclaredCheck = new VarNotDeclaredCheck(mySymbolTable,symbolTableReports);
             varNotDeclaredCheck.visit(rootNode, null);
+
+            var methodUndeclaredCheck = new UndeclaredMethodCheck(mySymbolTable,symbolTableReports);
+            methodUndeclaredCheck.visit(rootNode, null);
 
             var returnTypeCheck = new ReturnTypeCheck(mySymbolTable,symbolTableReports);
             returnTypeCheck.visit(rootNode, null);
 
-            var argTypeCheck = new ArgTypeCheck(mySymbolTable,symbolTableReports);
-            argTypeCheck.visit(rootNode, null);
+            //var argTypeCheck = new ArgTypeCheck(mySymbolTable,symbolTableReports);
+            //argTypeCheck.visit(rootNode, null);
 
             var thisStaticCheck = new ThisStaticCheck(mySymbolTable,symbolTableReports);
             thisStaticCheck.visit(rootNode, null);
 
-            var arrayIndexNotIntCheck = new ArrayIndexNotIntCheck(mySymbolTable,symbolTableReports);
-            arrayIndexNotIntCheck.visit(rootNode, null);
-
             var arrayAccessCheck = new ArrayAccessCheck(mySymbolTable,symbolTableReports);
             arrayAccessCheck.visit(rootNode, null);
+
+            var assignmentCheck = new AssignmentCheck(mySymbolTable,symbolTableReports);
+            assignmentCheck.visit(rootNode, null);
+
+            var BinaryOpCheck = new BinaryOpCheck(mySymbolTable,symbolTableReports);
+            BinaryOpCheck.visit(rootNode, null);
+
+            var BooleanOpCheck = new BooleanOpCheck(mySymbolTable,symbolTableReports);
+            BooleanOpCheck.visit(rootNode, null);
+
+            var IfWhileCheck = new IfWhileCheck(mySymbolTable,symbolTableReports);
+            IfWhileCheck.visit(rootNode, null);
 
             System.out.println(symbolTableReports);
 
