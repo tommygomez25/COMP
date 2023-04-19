@@ -6,10 +6,7 @@ import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2023.analyser.MySymbolTable;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Arrays;
+import java.util.*;
 
 
 public class OllirGenerator extends AJmmVisitor<String, List<String>> {
@@ -33,7 +30,7 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         addVisit("Assign", this::assignVisit);
         addVisit("ReturnFromMethod",this::returnFromMethodVisit);
         addVisit("IntLiteral", (node, jef) -> Arrays.asList(String.format("%s.i32",node.get("var")), "i32") );
-        addVisit("BoolLiteral", (node,jef) -> Arrays.asList(String.format("%s.bool",node.get("var")), "bool") );
+        addVisit("BoolLiteral", (node,jef) -> Arrays.asList(String.format("%s.bool",(node.get("var").equals("true") ? "1": "0")), "bool") );
         addVisit("Id", this::visitIdentifier);
         addVisit("Expr", this::visitExpression);
         addVisit("MethodCall", this::visitMethodCall);
@@ -70,7 +67,7 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
                 }
             }
 
-            ollirCode.append(").V;");
+            ollirCode.append(").V;\n");
         }
 
         return null;
@@ -171,7 +168,11 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
 
     private List<String> assignVisit(JmmNode node, String s) {
 
-        if (node.getJmmChild(0).getKind().equals("NewObject")) {return null;}
+        //a = b wrong lmao
+        if (node.getJmmChild(0).getKind().equals("NewObject")) {
+            visit(node.getJmmChild(0));
+            return null;
+        }
 
         String varName = node.get("varName");
 
@@ -199,14 +200,24 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
     private List<String> visitIdentifier(JmmNode node, String jef) {
         //either arg of function or created in function
         String methodName = node.getAncestor("Method").get().get("methodName");
-        String type = OllirUtils.convertType(symbolTable.getReturnType(methodName));
+        String varName = node.get("name");
+        String type = "";//OllirUtils.convertType(symbolTable.getReturnType(methodName));
+
+        List<Symbol> methodsVarsTypes = methodsVariablesTypes(methodName);
+
+        for (Symbol variable : methodsVarsTypes){
+            if (variable.getName().equals(varName)){
+                type = OllirUtils.convertType(variable.getType());
+                break;
+            }
+        }
 
         //arg of func
         if (node.getJmmParent().getKind().equals("ReturnFromMethod") || node.getJmmParent().getKind().equals("Arguments")){
-            return Arrays.asList(String.format("%s.%s",node.get("name"),type));
+            return Arrays.asList(String.format("%s.%s",varName,type));
         }
         //2ndOne
-        return Arrays.asList(methodName,type);
+        return Arrays.asList(varName,type);
     }
 
     //Auxfuns
@@ -221,9 +232,22 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         return null;
     }
 
+    private List<Symbol> methodsVariablesTypes(String methodName){
+
+        List<Symbol> vars = symbolTable.getLocalVariables(methodName); //local vars
+        vars.addAll(symbolTable.getParameters(methodName)); //parameters vars
+        /*
+        List<Type> varsTypes = new ArrayList<>();
+        for (var jef : vars) {
+            varsTypes.add(jef.getType());
+        }*/
+        return vars;
+    }
+
     //function parameters
     private String methodArgs(String methodName){
         List<Symbol> methodsList = symbolTable.getParameters(methodName);
+
 
         StringBuilder methodArgs = new StringBuilder();
 
@@ -231,9 +255,9 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
 
             Symbol firstArg = methodsList.get(0);
             methodArgs.append(OllirUtils.convertType(firstArg));
-            methodsList.remove(0);
+            //methodsList.remove(0);
 
-            for (var symbol : methodsList) {
+            for (var symbol : methodsList.subList(1,methodsList.size())) {
                 methodArgs.append(", " + OllirUtils.convertType(symbol));
             }
         }
