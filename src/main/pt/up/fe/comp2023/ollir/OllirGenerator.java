@@ -35,7 +35,12 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         addVisit("Expr", this::visitExpression);
         addVisit("MethodCall", this::visitMethodCall);
         addVisit("NewObject", this::visitNewObject);
+        addVisit("Binary Op", this::visitBinaryOp);
         setDefaultVisit((node,jef)-> null);
+    }
+
+    private List<String> visitBinaryOp(JmmNode node, String s) {
+        return null;
     }
 
     private List<String> visitNewObject(JmmNode node, String s) {
@@ -50,18 +55,39 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         return null;
     }
 
+    //check if identifier = class or var
+    private boolean checkIfClass(String varName){
+        for (var jef : symbolTable.getImports()){
+            if (jef.equals(varName)){
+                return true;
+            }
+        }
+        if (varName.equals(symbolTable.getClassName())) {return true;}
+        return false;
+    }
+
     private List<String> visitMethodCall(JmmNode node, String s) {
 
         //Multiple options (static method)
-        // inside each option : with or without args
+
+        String parentMethod = node.getAncestor("Method").get().get("methodName");
 
         List<String> args = exprArgs(node.getJmmChild(1)); //visit arguments node
-        String varName = node.getJmmChild(0).get("name"); //s.i32 -> s
+        String varName = node.getJmmChild(0).get("name"); //s.i32 -> s || io (class)
+        String varType = "";
+        String invokeType = "";
+
+        if(!checkIfClass(varName)) {
+            varType = "." + methodsVariablesType(parentMethod, varName);
+            invokeType = "virtual";
+        } else {
+            invokeType = "static";
+        }
         String method = node.get("caller");
 
-        //static
+        //static method
         if (node.getJmmParent().getKind().equals("Expr")){
-            ollirCode.append(String.format("invokestatic(%s, \"%s\"",varName,method));
+            ollirCode.append(String.format("invoke%s(%s%s, \"%s\"",invokeType,varName,varType,method));
 
             if (!args.isEmpty()){
                 for (var arg : args){
@@ -70,9 +96,10 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
             }
             ollirCode.append(").V;\n");
         }
+        //instance method (assign)
         if (node.getJmmParent().getKind().equals("Assign")){
 
-            String methodVarType = methodsVariablesType(node.getAncestor("Method").get().get("methodName"),varName);
+            String methodVarType = methodsVariablesType(parentMethod,varName);
             StringBuilder invokevirtualbody = new StringBuilder();
 
             invokevirtualbody.append(String.format("invokevirtual(%s.%s, \"%s\"",varName,methodVarType,method));
@@ -89,6 +116,7 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         return null;
     }
 
+    //called method list of args
     private List<String> exprArgs(JmmNode node){
 
         List<String> list = new ArrayList<>();
@@ -101,14 +129,11 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
     }
 
     private List<String> visitExpression(JmmNode node, String s) {
-
         for (var child : node.getChildren()){
             visit(child);
         }
-
         return null;
     }
-
 
     private List<String> programVisit(JmmNode node, String jef) {
         for (var importString : symbolTable.getImports()){
@@ -143,7 +168,7 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
             visit(child);
         }
 
-        ollirCode.append("}\n");
+        ollirCode.append("}\n"); //closing bracket of class
         return null;
     }
 
@@ -162,9 +187,7 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
             visit(child);
         }
 
-
         ollirCode.append("}\n"); //closing bracket of method
-
 
         return null;
     }
@@ -194,8 +217,6 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
 
         String varName = node.get("varName");
 
-        //String varType = fieldType(node.getJmmParent(),varName);
-
         List<String> nodeVals = visit(node.getJmmChild(0));
         String varType = methodsVariablesType(node.getAncestor("Method").get().get("methodName"),varName);
         String assignedVar = nodeVals.get(0);
@@ -219,17 +240,7 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         //either arg of function or created in function
         String methodName = node.getAncestor("Method").get().get("methodName");
         String varName = node.get("name");
-        String type = methodsVariablesType(methodName,varName); // type = methodsVariablesTypes(methodName,varName)
-
-        /*
-        List<Symbol> methodsVarsTypes = methodsVariablesType(methodName,varName);
-
-        for (Symbol variable : methodsVarsTypes){
-            if (variable.getName().equals(varName)){
-                type = OllirUtils.convertType(variable.getType());
-                break;
-            }
-        }*/
+        String type = methodsVariablesType(methodName,varName);
 
         //arg of func
         if (node.getJmmParent().getKind().equals("ReturnFromMethod") || node.getJmmParent().getKind().equals("Arguments")){
@@ -240,7 +251,6 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
     }
 
     //Auxfuns
-
 
     private String methodsVariablesType(String methodName,String varName){
 
@@ -262,14 +272,12 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
     private String methodArgs(String methodName){
         List<Symbol> methodsList = symbolTable.getParameters(methodName);
 
-
         StringBuilder methodArgs = new StringBuilder();
 
         if (!methodsList.isEmpty()) {
 
             Symbol firstArg = methodsList.get(0);
             methodArgs.append(OllirUtils.convertType(firstArg));
-            //methodsList.remove(0);
 
             for (var symbol : methodsList.subList(1,methodsList.size())) {
                 methodArgs.append(", " + OllirUtils.convertType(symbol));
@@ -277,18 +285,6 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         }
         return methodArgs.toString();
     }
-
-    private String fieldType(JmmNode node, String varName){
-        //possibly change to only 1st child
-        for (var child : node.getChildren())
-            if (child.getKind().equals("Field") && child.get("fieldName").equals(varName)){
-                Type type = (Type) child.getObject("fieldType");
-                return OllirUtils.convertType(type);
-            }
-
-        return null;
-    }
-
 
     public String getCode(){
         return ollirCode.toString();
