@@ -6,7 +6,6 @@ import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2023.analyser.MySymbolTable;
 
-import javax.swing.plaf.synth.SynthButtonUI;
 import java.util.*;
 
 
@@ -159,7 +158,12 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         List<String> list = new ArrayList<>();
 
         for(var child : node.getChildren()){
-            list.add(visit(child).get(0));
+            if (child.getKind().equals("BinaryOp")){
+                List<String> args = visit(child);
+                list.add(args.get(0)+ "." + args.get(1));
+            } else {
+                list.add(visit(child).get(0));
+            }
         }
 
         return list;
