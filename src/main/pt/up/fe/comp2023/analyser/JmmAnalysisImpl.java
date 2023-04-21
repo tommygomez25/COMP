@@ -37,7 +37,7 @@ public class JmmAnalysisImpl implements JmmAnalysis {
             JmmNode rootNode = jmmParserResult.getRootNode();
             MySymbolTable mySymbolTable = new MySymbolTable();
             List<Report> symbolTableReports = new MySymbolTableVisitor().visit(rootNode, mySymbolTable);
-
+            /*
             var varNotDeclaredCheck = new VarNotDeclaredCheck(mySymbolTable,symbolTableReports);
             varNotDeclaredCheck.visit(rootNode, null);
 
@@ -67,8 +67,8 @@ public class JmmAnalysisImpl implements JmmAnalysis {
 
             var IfWhileCheck = new IfWhileCheck(mySymbolTable,symbolTableReports);
             IfWhileCheck.visit(rootNode, null);
-
             System.out.println(symbolTableReports);
+            */
 
             return new JmmSemanticsResult(jmmParserResult, mySymbolTable, symbolTableReports);
         }
