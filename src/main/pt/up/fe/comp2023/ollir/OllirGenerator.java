@@ -6,6 +6,7 @@ import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2023.analyser.MySymbolTable;
 
+import javax.swing.plaf.synth.SynthButtonUI;
 import java.util.*;
 
 
@@ -74,8 +75,6 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
             case "/":
                 ollirCode.append(String.format("%s.i32 :=.i32 %s %s.i32 %s;\n",tempVar,lhs.toString(),op,rhs.toString()));
                 type = "i32";
-
-
         }
 
         return Arrays.asList(tempVar,type);
@@ -200,7 +199,7 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
 
         //constructor
         ollirCode.append(String.format("\t.construct %s().V {\n",symbolTable.getClassName()));
-        ollirCode.append("\t\tinvokespecial(this, \"<init>\").V;\n" + "\t}\n");
+        ollirCode.append("\t\tinvokespecial(this, \"<init>\").V;\n" + "\t}\n\n");
 
         for (var child : node.getChildren()){
             visit(child);
@@ -220,7 +219,6 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
             ollirCode.append(String.format(".method public %s(%s).%s {\n",
                     methodName,methodArgs(methodName),
                     OllirUtils.convertType(symbolTable.getReturnType(methodName))));
-
         }
         for (var child : node.getChildren()){
             visit(child);
@@ -252,26 +250,31 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
 
 
         String childNodeKind = node.getJmmChild(0).getKind();
-        //a = b wrong lmao
+        //New Object
         if (childNodeKind.equals("NewObject")) {
             visit(node.getJmmChild(0));
             return null;
         }
 
         String varName = node.get("varName");
+        String varType = methodsVariablesType(node.getAncestor("Method").get().get("methodName"),varName);
 
         List<String> nodeVals = visit(node.getJmmChild(0));
-        String varType = methodsVariablesType(node.getAncestor("Method").get().get("methodName"),varName);
         String assignedVar = nodeVals.get(0);
 
-        if (childNodeKind.equals("Id") || childNodeKind.equals("MethodCall") || childNodeKind.equals("BinaryOp")){
-            ollirCode.append(String.format("%s.%s :=.%s %s.%s;",varName, varType, varType,assignedVar,varType));
-        }
-        else if (childNodeKind.equals("NewObject")){
-            visit(node.getJmmChild(0));
+        if (childNodeKind.equals("Id") || childNodeKind.equals("MethodCall") || childNodeKind.equals("BinaryOp")) {
+            if (isField(varName)){
+                ollirCode.append(String.format("putfield(this, %s.%s, %s.%s).V;",varName,varType,assignedVar,varType));
+            } else {
+                ollirCode.append(String.format("%s.%s :=.%s %s.%s;", varName, varType, varType, assignedVar, varType));
+            }
         }
         else {
-            ollirCode.append(String.format("%s.%s :=.%s %s;",varName,varType,varType,assignedVar));
+            if (isField(varName)){
+                ollirCode.append(String.format("putfield(this, %s.%s, %s).V;",varName,varType,assignedVar));
+            } else {
+                ollirCode.append(String.format("%s.%s :=.%s %s;",varName,varType,varType,assignedVar));
+            }
         }
 
         ollirCode.append("\n");
@@ -282,8 +285,20 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
     private List<String> visitIdentifier(JmmNode node, String jef) {
         //either arg of function or created in function
         String methodName = node.getAncestor("Method").get().get("methodName");
-        String varName = node.get("name");
-        String type = methodsVariablesType(methodName,varName);
+        String variableName = node.get("name");
+        StringBuilder variableNameBuilder = new StringBuilder();
+        String type = methodsVariablesType(methodName,variableName);
+
+        //if var is a field create temp var and assign varName to that temp var
+        //also verify that is not local
+        if (isField(variableName) /*isLocal()*/){
+            String tempVar = newTempVar();
+            ollirCode.append(String.format("%s.%s :=.%s getfield(this, %s.%s).%s;\n",tempVar,type,type,variableName,type,type));
+            variableNameBuilder.append(tempVar);
+        } else {
+            variableNameBuilder.append(variableName);
+        }
+        String varName = variableNameBuilder.toString();
 
         //arg of func
         if (node.getJmmParent().getKind().equals("ReturnFromMethod") || node.getJmmParent().getKind().equals("Arguments")){
@@ -295,11 +310,22 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
 
     //Auxfuns
 
+    private boolean isField(String varName){
+
+        for (Symbol s : symbolTable.getFields()){
+            if (s.getName().equals(varName)){
+                return true;
+            }
+        }
+        return false;
+    }
+
     private String methodsVariablesType(String methodName,String varName){
 
         String type = "";
         List<Symbol> vars = symbolTable.getLocalVariables(methodName); //local vars
         vars.addAll(symbolTable.getParameters(methodName)); //parameters vars
+        vars.addAll(symbolTable.getFields()); //fields vars
 
         for (Symbol variable : vars){
             if (variable.getName().equals(varName)){
