@@ -27,6 +27,7 @@ public class JasminUtils {
         return jasminCode.toString();
     }
 
+
     public static String getQualifiedName(ClassUnit classUnit, String className){
         for(String importName : classUnit.getImports()){
             var split = importName.split("\\.");
