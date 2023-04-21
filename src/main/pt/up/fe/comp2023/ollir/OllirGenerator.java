@@ -15,6 +15,8 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
 
     private final MySymbolTable symbolTable;
 
+    private int tempVarNum = 0;
+
     public OllirGenerator(MySymbolTable symbolTable) {
         this.symbolTable = symbolTable;
         this.buildVisitor();
@@ -35,12 +37,48 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         addVisit("Expr", this::visitExpression);
         addVisit("MethodCall", this::visitMethodCall);
         addVisit("NewObject", this::visitNewObject);
-        addVisit("Binary Op", this::visitBinaryOp);
+        addVisit("BinaryOp", this::visitBinaryOp);
         setDefaultVisit((node,jef)-> null);
     }
 
     private List<String> visitBinaryOp(JmmNode node, String s) {
-        return null;
+
+        List<String> lhsObj = visit(node.getJmmChild(0)); //if ID -> name of var
+        List<String> rhsObj = visit(node.getJmmChild(1));
+
+        //check lhs and rhs : can be ID's, Int/BoolLiteral or another BinaryOp (or even (Parenthesis))
+        StringBuilder lhs = new StringBuilder();
+        StringBuilder rhs = new StringBuilder();
+
+        if ((!lhsObj.get(0).contains("."))) {
+            lhs.append(lhsObj.get(0) + "." + lhsObj.get(1));
+        } else {
+            lhs.append(lhsObj.get(0));
+        }
+        if ((!rhsObj.get(0).contains("."))) {
+            rhs.append(rhsObj.get(0) + "." + rhsObj.get(1));
+        } else {
+            lhs.append(rhsObj.get(0));
+        }
+
+
+        String type = "";
+
+        String op = node.get("op");
+        String tempVar = newTempVar();
+
+        switch (op){
+            case "+":
+            case "-":
+            case "*":
+            case "/":
+                ollirCode.append(String.format("%s.i32 :=.i32 %s %s.i32 %s;\n",tempVar,lhs.toString(),op,rhs.toString()));
+                type = "i32";
+
+
+        }
+
+        return Arrays.asList(tempVar,type);
     }
 
     private List<String> visitNewObject(JmmNode node, String s) {
@@ -174,6 +212,7 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
 
     private List<String> methodDeclarationVisit(JmmNode node, String jef){
         String methodName = node.get("methodName");
+        tempVarNum = 0;
         if(methodName.equals("main")) {
             ollirCode.append(".method public static main(args.array.String).V {\n");
         }
@@ -195,11 +234,15 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
 
     private List<String> returnFromMethodVisit(JmmNode node, String jef) {
 
+        String returnType = OllirUtils.convertType(symbolTable.getReturnType(node.getJmmParent().get("methodName")));
         if (!node.getChildren().isEmpty()) {
             String retVal = visit(node.getJmmChild(0)).get(0);
-
-            ollirCode.append(String.format("ret.%s %s;\n", OllirUtils.convertType(symbolTable.getReturnType(node.getJmmParent().get("methodName"))),
-                retVal));
+            if (node.getJmmChild(0).getKind().equals("BinaryOp")){
+                ollirCode.append(String.format("ret.%s %s.%s;\n", returnType,
+                        retVal,returnType));
+            } else {
+                ollirCode.append(String.format("ret.%s %s;\n", returnType, retVal));
+            }
         }
 
         return null;
@@ -284,6 +327,10 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
             }
         }
         return methodArgs.toString();
+    }
+
+    private String newTempVar(){
+        return String.format("t%d",this.tempVarNum++);
     }
 
     public String getCode(){
