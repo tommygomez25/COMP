@@ -5,7 +5,6 @@ import pt.up.fe.specs.util.exceptions.NotImplementedException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Objects;
 
 import static java.lang.Integer.parseInt;
@@ -101,10 +100,8 @@ public class MethodInstructionBuilder {
 
 
 
-        if(instruction.getInvocationType() == CallType.arraylength){
-            jasminCode.append(instruction.getFirstArg()).append(JasminInstruction.instArraylength());
-        }
-        else if(instruction.getInvocationType() == CallType.NEW){
+
+        if(instruction.getInvocationType() == CallType.NEW){
             ElementType type = instruction.getReturnType().getTypeOfElement();
             if (type == ElementType.ARRAYREF){
                 jasminCode.append(loadElement(instruction.getFirstArg()));

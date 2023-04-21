@@ -60,8 +60,6 @@ public class JasminInstruction {
 
     public static String instAreturn() { return "\tareturn\n"; }
 
-    public static String instArraylength() { return "\tarraylength \n";}
-
     public static String instNewArray() { return "\tnewarray int\n"; }
 
     public static String instNew(String type) { return "\tnew " + type + "\n"; }
