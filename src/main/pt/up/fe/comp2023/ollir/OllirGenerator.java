@@ -58,7 +58,7 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         if ((!rhsObj.get(0).contains("."))) {
             rhs.append(rhsObj.get(0) + "." + rhsObj.get(1));
         } else {
-            lhs.append(rhsObj.get(0));
+            rhs.append(rhsObj.get(0));
         }
 
 
