@@ -264,10 +264,10 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         String varType = methodsVariablesType(node.getAncestor("Method").get().get("methodName"),varName);
         String assignedVar = nodeVals.get(0);
 
-        if (childNodeKind.equals("Id") || childNodeKind.equals("MethodCall")){
+        if (childNodeKind.equals("Id") || childNodeKind.equals("MethodCall") || childNodeKind.equals("BinaryOp")){
             ollirCode.append(String.format("%s.%s :=.%s %s.%s;",varName, varType, varType,assignedVar,varType));
         }
-        else if (node.getJmmChild(0).getKind().equals("NewObject")){
+        else if (childNodeKind.equals("NewObject")){
             visit(node.getJmmChild(0));
         }
         else {
