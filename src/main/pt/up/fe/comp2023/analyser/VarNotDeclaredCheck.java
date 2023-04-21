@@ -9,6 +9,7 @@ import pt.up.fe.comp.jmm.report.ReportType;
 import pt.up.fe.comp.jmm.report.Stage;
 
 import java.util.List;
+import java.util.Optional;
 
 public class VarNotDeclaredCheck extends PreorderJmmVisitor<Integer, Integer> {
 
@@ -38,6 +39,7 @@ public class VarNotDeclaredCheck extends PreorderJmmVisitor<Integer, Integer> {
             reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Variable " + varName + " not declared"));
             return 0;
         }
+        if (checkStatic(node, varName)) return 0;
 
     return 1;
     }
@@ -48,6 +50,7 @@ public class VarNotDeclaredCheck extends PreorderJmmVisitor<Integer, Integer> {
             reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Variable " + varName + " not declared"));
             return 0;
         }
+        if (checkStatic(node, varName)) return 0;
         return 1;
     }
 
@@ -57,6 +60,7 @@ public class VarNotDeclaredCheck extends PreorderJmmVisitor<Integer, Integer> {
             reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Variable " + varName + " not declared"));
             return 0;
         }
+        if (checkStatic(node, varName)) return 0;
         return 1;
     }
 
@@ -76,19 +80,38 @@ public class VarNotDeclaredCheck extends PreorderJmmVisitor<Integer, Integer> {
         return 1;
     }
 
-    public Integer visitArrayAccess(JmmNode jmmNode, Integer ret) {
-        JmmNode array = jmmNode.getChildren().get(0);
+    public Integer visitArrayAccess(JmmNode node, Integer ret) {
+        JmmNode array = node.getChildren().get(0);
         Symbol operandType = AnalysisUtils.getSymbol(array, symbolTable);
 
         if (operandType.getType().getName().equals("unknown")) {
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Variable not declared"));
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Variable not declared"));
             return 0;
         }
 
         if (!symbolTable.isVarDeclared(operandType.getName())) {
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(jmmNode.get("lineStart")), "Variable " + operandType.getName() + " not declared"));
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Variable " + operandType.getName() + " not declared"));
             return 0;
         }
+        String varName = operandType.getName();
+        if (checkStatic(node, varName)) return 0;
         return 1;
+    }
+
+    public boolean checkStatic(JmmNode node, String varName) {
+
+        Optional<JmmNode> methodNameNode = node.getAncestor("Method");
+        if (methodNameNode.isPresent()) {
+            String methodName = methodNameNode.get().get("methodName");
+            if (methodName.equals("main")) {
+                for (Symbol f : symbolTable.getFields()) {
+                    if (f.getName().equals(varName))
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Variable " + varName + " can not be used in main/static context"));
+                        return true;
+                }
+
+            }
+        }
+        return false;
     }
 }

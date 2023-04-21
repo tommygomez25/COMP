@@ -26,16 +26,16 @@ public class UndeclaredMethodCheck extends PreorderJmmVisitor<Integer, Integer> 
 
     @Override
     protected void buildVisitor() {
-        addVisit("MethodCall", this::visitMethod);
+        addVisit("MethodCall", this::visitMethodCall);
         setDefaultVisit((node, symbolTable) -> 0);
     }
 
-    private Integer visitMethod(JmmNode jmmNode, Integer ret) {
+    private Integer visitMethodCall(JmmNode jmmNode, Integer ret) {
 
         String methodName = jmmNode.get("caller");
         String superClass = symbolTable.getSuper();
         Type returnType = symbolTable.getReturnType(methodName);
-        Type classType = AnalysisUtils.getType(jmmNode.getJmmChild(0), symbolTable);
+        Type classType = AnalysisUtils.getTypeOperand(jmmNode.getJmmChild(0), symbolTable);
         String className = classType.getName();
 
         if (className.equals(symbolTable.getClassName())) {
