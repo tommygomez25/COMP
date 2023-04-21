@@ -9,8 +9,10 @@ import pt.up.fe.comp.TestUtils;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
+import pt.up.fe.comp.jmm.jasmin.JasminResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
 import pt.up.fe.comp2023.analyser.JmmAnalysisImpl;
+import pt.up.fe.comp2023.ollir.JmmOptimizationImpl;
 import pt.up.fe.specs.util.SpecsIo;
 import pt.up.fe.specs.util.SpecsLogs;
 import pt.up.fe.specs.util.SpecsSystem;
@@ -57,8 +59,36 @@ public class Launcher {
 
         // Instantiate JmmAnalyser
         JmmAnalysisImpl analyser = new JmmAnalysisImpl();
-        analyser.semanticAnalysis(parserResult);
+        JmmSemanticsResult semanticResult = analyser.semanticAnalysis(parserResult);
+        if(semanticResult.getReports().size() > 0){
+            System.out.println("Parsing errors:");
+            for (var report : parserResult.getReports()) {
+                System.out.println(report);
+            }
+            return;
+        }
 
+        // optimization phase, call toOllir
+        OllirResult ollirResult = new JmmOptimizationImpl().toOllir(semanticResult);
+        if(ollirResult.getReports().size() > 0){
+            System.out.println("Parsing errors:");
+            for (var report : parserResult.getReports()) {
+                System.out.println(report);
+            }
+            return;
+        }
+
+
+        JasminResult jasminResult = new MyJasminBackend().toJasmin(ollirResult);
+        if(jasminResult.getReports().size() > 0){
+            System.out.println("Parsing errors:");
+            for (var report : parserResult.getReports()) {
+                System.out.println(report);
+            }
+            return;
+        }
+
+        SpecsIo.copy(jasminResult.compile(), new File(jasminResult.getClassName() + ".class"));
 
     }
 
