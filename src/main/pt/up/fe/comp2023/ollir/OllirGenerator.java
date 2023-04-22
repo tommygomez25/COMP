@@ -301,6 +301,23 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
 
         return null;
     }
+    private String varScope(String varName, String methodName){
+
+        for (var var : symbolTable.getLocalVariables(methodName)){
+            if (var.getName().equals(varName)){return "local";}
+        }
+        for (int i = 0; i < symbolTable.getParameters(methodName).size(); i++){
+            if (symbolTable.getParameters(methodName).get(i).getName().equals(varName))
+                {
+                    int param = i+1;
+                    return "$" + param;
+                }
+        }
+        if (isField(varName)){
+            return "field";
+        }
+        return "";
+    }
 
     private List<String> assignVisit(JmmNode node, String s) {
 
@@ -311,25 +328,33 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
             visit(node.getJmmChild(0),node.get("varName"));
             return null;
         }
+        String parentMethod = node.getAncestor("Method").get().get("methodName");
+        StringBuilder varNameBuilder = new StringBuilder();
+        String varScope = varScope(node.get("varName"),parentMethod); //local, $varname, field
+        //check if assigned var is a parameter
+        if (varScope.startsWith("$")){
+            varNameBuilder.append(varScope + ".");
+        }
+        varNameBuilder.append(node.get("varName"));
+        String varName = varNameBuilder.toString();
 
-        String varName = node.get("varName");
-        String varType = methodsVariablesType(node.getAncestor("Method").get().get("methodName"),varName);
+        String varType = methodsVariablesType(parentMethod,node.get("varName"));
 
         List<String> nodeVals = visit(node.getJmmChild(0));
         String assignedVar = nodeVals.get(0);
 
         if (childNodeKind.equals("Id") || childNodeKind.equals("MethodCall") || childNodeKind.equals("BinaryOp") || childNodeKind.equals("ArrayLength")) {
-            if (isField(varName)){
-                ollirCode.append(String.format("putfield(this, %s.%s, %s.%s).V;",varName,varType,assignedVar,varType));
-            } else {
+            if (!varScope.equals("field")){
                 ollirCode.append(String.format("%s.%s :=.%s %s.%s;", varName, varType, varType, assignedVar, varType));
+            } else {
+                ollirCode.append(String.format("putfield(this, %s.%s, %s.%s).V;",varName,varType,assignedVar,varType));
             }
         }
         else {
-            if (isField(varName)){
-                ollirCode.append(String.format("putfield(this, %s.%s, %s).V;",varName,varType,assignedVar));
-            } else {
+            if (!varScope.equals("field")){
                 ollirCode.append(String.format("%s.%s :=.%s %s;",varName,varType,varType,assignedVar));
+            } else {
+                ollirCode.append(String.format("putfield(this, %s.%s, %s).V;",varName,varType,assignedVar));
             }
         }
 
@@ -344,14 +369,18 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         String variableName = node.get("name");
         StringBuilder variableNameBuilder = new StringBuilder();
         String type = methodsVariablesType(methodName,variableName);
+        String varScope = varScope(variableName,methodName);
 
         //if var is a field create temp var and assign varName to that temp var
         //also verify that is not local
-        if (isField(variableName) /*isLocal()*/){
+        if (varScope.equals("field")){
             String tempVar = newTempVar();
             ollirCode.append(String.format("%s.%s :=.%s getfield(this, %s.%s).%s;\n",tempVar,type,type,variableName,type,type));
             variableNameBuilder.append(tempVar);
         } else {
+            if (varScope.startsWith("$")){
+                variableNameBuilder.append(varScope + ".");
+            }
             variableNameBuilder.append(variableName);
         }
         String varName = variableNameBuilder.toString();
@@ -379,9 +408,10 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
     private String methodsVariablesType(String methodName,String varName){
 
         String type = "";
-        List<Symbol> vars = symbolTable.getLocalVariables(methodName); //local vars
-        vars.addAll(symbolTable.getParameters(methodName)); //parameters vars
-        vars.addAll(symbolTable.getFields()); //fields vars
+        List<Symbol> vars = new ArrayList<>();
+        vars.addAll(new ArrayList<>((symbolTable.getLocalVariables(methodName)))); //local vars
+        vars.addAll(new ArrayList<>((symbolTable.getParameters(methodName)))); //parameters vars
+        vars.addAll(new ArrayList<>((symbolTable.getFields()))); //fields vars
 
         for (Symbol variable : vars){
             if (variable.getName().equals(varName)){
