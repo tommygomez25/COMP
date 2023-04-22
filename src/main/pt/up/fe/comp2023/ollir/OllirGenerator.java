@@ -38,6 +38,9 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         addVisit("MethodCall", this::visitMethodCall);
         addVisit("NewObject", this::visitNewObject);
         addVisit("BinaryOp", this::visitBinaryOp);
+        addVisit("NewIntArray", this::visitNewIntArray);
+        addVisit("ArrayLength",this::visitArrayLength);
+        addVisit("ArrayAssign", this::visitArrayAssign);
         setDefaultVisit((node,jef)-> null);
     }
 
@@ -250,13 +253,62 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         return null;
     }
 
+    private List<String> visitArrayAssign(JmmNode node, String s) {
+
+        //index and value
+        String arrayName = node.get("varName");
+        List<String> index = visit(node.getJmmChild(0));
+        List<String> value = visit(node.getJmmChild(1));
+
+        if (node.getJmmChild(0).getKind().equals("IntLiteral")){
+            String tempVar = newTempVar();
+            ollirCode.append(String.format("%s.i32 :=.i32 %s;\n",tempVar,index.get(0)));
+            if (node.getJmmChild(1).getKind().equals("IntLiteral")){
+                ollirCode.append(String.format("%s[%s.i32].i32 :=.i32 %s;\n",arrayName,tempVar,value.get(0)));
+            } else {
+                ollirCode.append(String.format("%s[%s.i32].i32 :=.i32 %s.i32;\n",arrayName,tempVar,value.get(0)));
+            }
+        } else {
+            if (node.getJmmChild(1).getKind().equals("IntLiteral")){
+                ollirCode.append(String.format("%s[%s.i32].i32 :=.i32 %s;\n", arrayName, index.get(0), value.get(0)));
+            } else {
+                ollirCode.append(String.format("%s[%s.i32].i32 :=.i32 %s.i32;\n", arrayName, index.get(0), value.get(0)));
+            }
+        }
+        return null;
+    }
+
+    private List<String> visitArrayLength(JmmNode node, String s) {
+        String tempVar = newTempVar();
+        String arrayVar = visit(node.getJmmChild(0)).get(0);
+        ollirCode.append(String.format("%s.i32 :=.i32 arraylength(%s.array.i32).i32;\n",tempVar,arrayVar));
+        return Arrays.asList(tempVar,"i32");
+    }
+
+    private List<String> visitNewIntArray(JmmNode node, String varName) {
+
+        StringBuilder length = new StringBuilder();
+        List<String> lengthVar = visit(node.getJmmChild(0));
+        if (node.getJmmChild(0).getKind().equals("IntLiteral")){
+            String tempVar = newTempVar();
+            ollirCode.append(String.format("%s.i32 :=.i32 %s;\n",tempVar,lengthVar.get(0)));
+            length.append(tempVar + ".i32");
+        } else{
+            length.append(lengthVar.get(0) + ".i32");
+        }
+
+        ollirCode.append(String.format("%s.array.i32 :=.array.i32 new(array, %s).array.i32;\n",varName,length.toString()));
+
+        return null;
+    }
+
     private List<String> assignVisit(JmmNode node, String s) {
 
 
         String childNodeKind = node.getJmmChild(0).getKind();
-        //New Object
-        if (childNodeKind.equals("NewObject")) {
-            visit(node.getJmmChild(0));
+        //New Object / NewIntArray
+        if (childNodeKind.equals("NewObject") || childNodeKind.equals("NewIntArray")) {
+            visit(node.getJmmChild(0),node.get("varName"));
             return null;
         }
 
@@ -266,7 +318,7 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         List<String> nodeVals = visit(node.getJmmChild(0));
         String assignedVar = nodeVals.get(0);
 
-        if (childNodeKind.equals("Id") || childNodeKind.equals("MethodCall") || childNodeKind.equals("BinaryOp")) {
+        if (childNodeKind.equals("Id") || childNodeKind.equals("MethodCall") || childNodeKind.equals("BinaryOp") || childNodeKind.equals("ArrayLength")) {
             if (isField(varName)){
                 ollirCode.append(String.format("putfield(this, %s.%s, %s.%s).V;",varName,varType,assignedVar,varType));
             } else {
