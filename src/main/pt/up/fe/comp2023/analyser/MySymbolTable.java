@@ -407,5 +407,19 @@ public class MySymbolTable implements SymbolTable {
         return false;
     }
 
+    public boolean isVarAssigned(Symbol varSymbol ,String methodName){
+
+        for (Symbol localVariable : methodLocalVariables.get(methodName)) {
+            if (localVariable.equals(varSymbol)) {
+                return true;
+            }
+        }
+        for (Symbol parameter : methodParameters.get(methodName)) {
+            if (parameter.equals(varSymbol)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 

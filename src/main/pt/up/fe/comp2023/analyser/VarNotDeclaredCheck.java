@@ -125,7 +125,7 @@ public class VarNotDeclaredCheck extends PreorderJmmVisitor<Integer, Integer> {
             String methodName = methodNameNode.get().get("methodName");
             if (methodName.equals("main")) {
                 for (Symbol f : symbolTable.getFields()) {
-                    if (f.equals(varSymbol))
+                    if (f.equals(varSymbol) && !symbolTable.isVarAssigned(varSymbol,methodName))
                         reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Variable " + varSymbol.getName() + " can not be used in main/static context"));
                         return true;
                 }
