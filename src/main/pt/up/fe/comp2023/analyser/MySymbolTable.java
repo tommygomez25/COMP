@@ -268,25 +268,15 @@ public class MySymbolTable implements SymbolTable {
 
     public Symbol findFieldMethod(String name,String methodName){
 
-        // iterate method local variables
-        for(String method : methods){
-            for(Symbol localVariable : methodLocalVariables.get(method)){
-                if(localVariable.getName().equals(name)){
-                    return localVariable;
-                }
+        for (Symbol localVariable : methodLocalVariables.get(methodName)) {
+            if (localVariable.getName().equals(name)) {
+                return localVariable;
             }
         }
-
-        // iterate method parameters
-        for(String method : methods){
-            if (method.equals(methodName)) {
-                for(Symbol parameter : methodParameters.get(method)){
-                    if(parameter.getName().equals(name)){
-                        return parameter;
-                    }
-                }
+        for (Symbol parameter : methodParameters.get(methodName)) {
+            if (parameter.getName().equals(name)) {
+                return parameter;
             }
-
         }
 
         for(Symbol field : fields){
@@ -305,6 +295,36 @@ public class MySymbolTable implements SymbolTable {
         return new Symbol(new Type("unknown",false),name);
     }
 
+    public Type getVarType(String varName,String methodName) {
+
+        for (Symbol localVariable : methodLocalVariables.get(methodName)) {
+            if (localVariable.getName().equals(varName)) {
+                return localVariable.getType();
+            }
+        }
+
+        for (Symbol parameter : methodParameters.get(methodName)) {
+            if (parameter.getName().equals(varName)) {
+                return parameter.getType();
+            }
+        }
+
+
+        for (Symbol field : fields) {
+            if (field.getName().equals(varName)) {
+                return field.getType();
+            }
+        }
+
+        // check if it is in imports
+        for (String imp : imports) {
+            if (imp.endsWith(varName)) {
+                return new Type(varName,false);
+            }
+        }
+
+        return new Type("unknown",false);
+    }
     public Type getVarType(String varName) {
 
         for (String method : methods) {
@@ -336,6 +356,8 @@ public class MySymbolTable implements SymbolTable {
 
         return new Type("unknown",false);
     }
+
+
 
     public boolean isClassImported(String className){
         for(String imp : imports){

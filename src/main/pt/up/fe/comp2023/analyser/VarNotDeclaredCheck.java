@@ -39,9 +39,14 @@ public class VarNotDeclaredCheck extends PreorderJmmVisitor<Integer, Integer> {
             reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Variable " + varName + " not declared"));
             return 0;
         }
-        if (checkStatic(node, varName)) return 0;
+        // create a Symbol object to get the type of the variable
+        if (node.getAncestor("Method").isPresent()) {
+            String methodName = node.getAncestor("Method").get().get("methodName");
+            Symbol varSymbol = symbolTable.findFieldMethod(varName, methodName);
+            if (checkStatic(node, varSymbol)) return 0;
+        }
 
-    return 1;
+        return 1;
     }
 
     public Integer visitAssign(JmmNode node, Integer ret) {
@@ -50,7 +55,12 @@ public class VarNotDeclaredCheck extends PreorderJmmVisitor<Integer, Integer> {
             reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Variable " + varName + " not declared"));
             return 0;
         }
-        if (checkStatic(node, varName)) return 0;
+        // create a Symbol object to get the type of the variable
+        if (node.getAncestor("Method").isPresent()) {
+            String methodName = node.getAncestor("Method").get().get("methodName");
+            Symbol varSymbol = symbolTable.findFieldMethod(varName, methodName);
+            if (checkStatic(node, varSymbol)) return 0;
+        }
         return 1;
     }
 
@@ -60,7 +70,12 @@ public class VarNotDeclaredCheck extends PreorderJmmVisitor<Integer, Integer> {
             reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Variable " + varName + " not declared"));
             return 0;
         }
-        if (checkStatic(node, varName)) return 0;
+        // create a Symbol object to get the type of the variable
+        if (node.getAncestor("Method").isPresent()) {
+            String methodName = node.getAncestor("Method").get().get("methodName");
+            Symbol varSymbol = symbolTable.findFieldMethod(varName, methodName);
+            if (checkStatic(node, varSymbol)) return 0;
+        }
         return 1;
     }
 
@@ -94,19 +109,24 @@ public class VarNotDeclaredCheck extends PreorderJmmVisitor<Integer, Integer> {
             return 0;
         }
         String varName = operandType.getName();
-        if (checkStatic(node, varName)) return 0;
+        // create a Symbol object to get the type of the variable
+        if (node.getAncestor("Method").isPresent()) {
+            String methodName = node.getAncestor("Method").get().get("methodName");
+            Symbol varSymbol = symbolTable.findFieldMethod(varName, methodName);
+            if (checkStatic(node, varSymbol)) return 0;
+        }
         return 1;
     }
 
-    public boolean checkStatic(JmmNode node, String varName) {
+    public boolean checkStatic(JmmNode node, Symbol varSymbol) {
 
         Optional<JmmNode> methodNameNode = node.getAncestor("Method");
         if (methodNameNode.isPresent()) {
             String methodName = methodNameNode.get().get("methodName");
             if (methodName.equals("main")) {
                 for (Symbol f : symbolTable.getFields()) {
-                    if (f.getName().equals(varName))
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Variable " + varName + " can not be used in main/static context"));
+                    if (f.equals(varSymbol))
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("lineStart")), "Variable " + varSymbol.getName() + " can not be used in main/static context"));
                         return true;
                 }
 

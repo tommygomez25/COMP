@@ -1,11 +1,17 @@
 import io;
 
-class B {
-	int a;
-	public static void main(String[] args){
-		B b;
-		b = new B();
-		a = 2;
-		io.println(b);
-	}
+class A {
+    int a;
+
+    public int x(){
+        a = 10;
+        io.print(a);
+        return a;
+    }
+
+    public static void main(String[] args){
+        A a;
+        a = new A();
+        a.x();
+    }
 }
