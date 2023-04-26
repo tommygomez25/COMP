@@ -29,8 +29,15 @@ public class AssignmentCheck extends PreorderJmmVisitor<Integer, Integer> {
     public Integer visitAssign(JmmNode node, Integer ret) {
 
         JmmNode right = node.getChildren().get(0);
+        Type leftType;
+        if (node.getAncestor("Method").isPresent()) {
+            String methodName = node.getAncestor("Method").get().get("methodName");
+            leftType = symbolTable.getVarType(node.get("varName"), methodName);
+        }
+        else {
+            leftType = symbolTable.getVarType(node.get("varName"));
+        }
 
-        Type leftType = symbolTable.getVarType(node.get("varName"));
         Type rightType = AnalysisUtils.getType(right,symbolTable);
         if (rightType == null) {
             return 0;
@@ -48,7 +55,16 @@ public class AssignmentCheck extends PreorderJmmVisitor<Integer, Integer> {
         JmmNode right = node.getChildren().get(1);
         JmmNode middle = node.getChildren().get(0);
 
-        Type leftType = symbolTable.getVarType(node.get("varName"));
+        Type leftType;
+        if (node.getAncestor("Method").isPresent()) {
+            String methodName = node.getAncestor("Method").get().get("methodName");
+            leftType = symbolTable.getVarType(node.get("varName"), methodName);
+
+        }
+        else {
+            leftType = symbolTable.getVarType(node.get("varName"));
+        }
+
         Type rightType = AnalysisUtils.getType(right,symbolTable);
         Type middleType = AnalysisUtils.getType(middle,symbolTable);
 
