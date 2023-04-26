@@ -133,7 +133,11 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
                     ollirCode.append(String.format(", %s",arg));
                 }
             }
-            ollirCode.append(").V;\n");
+            String returnType = "";
+            if ((!varType.isEmpty()) && varType.substring(1).equals(symbolTable.getClassName())){returnType = OllirUtils.convertType(symbolTable.getReturnType(method));} else{
+                returnType= "V";}
+
+            ollirCode.append(")." + returnType +  ";\n");
         }
         //instance method (assign)
         if (node.getJmmParent().getKind().equals("Assign")){
