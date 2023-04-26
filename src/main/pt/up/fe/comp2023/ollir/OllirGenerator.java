@@ -230,6 +230,10 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         for (var child : node.getChildren()){
             visit(child);
         }
+        if (methodName.equals("main")){
+            ollirCode.append("ret.V;\n");
+        }
+
 
         ollirCode.append("}\n"); //closing bracket of method
 
