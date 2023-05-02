@@ -1,5 +1,6 @@
 package pt.up.fe.comp2023.analyser;
 
+import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.PreorderJmmVisitor;
 import pt.up.fe.comp.jmm.report.Report;
@@ -26,7 +27,14 @@ public class ThisStaticCheck extends PreorderJmmVisitor<Integer, Integer>{
 
     public Integer visitAssign(JmmNode jmmNode, Integer arg) {
         var varName = jmmNode.get("varName");
-        var varType = symbolTable.getVarType(varName);
+        Type varType;
+        if (jmmNode.getAncestor("Method").isPresent()) {
+            var methodName = jmmNode.getAncestor("Method").get().get("methodName");
+            varType = symbolTable.getVarType(varName, methodName);
+        }
+        else {
+            varType = symbolTable.getVarType(varName);
+        }
 
         for (JmmNode child : jmmNode.getChildren()) {
             if (child.getKind().equals("This")) {

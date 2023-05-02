@@ -38,6 +38,9 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         addVisit("MethodCall", this::visitMethodCall);
         addVisit("NewObject", this::visitNewObject);
         addVisit("BinaryOp", this::visitBinaryOp);
+        addVisit("NewIntArray", this::visitNewIntArray);
+        addVisit("ArrayLength",this::visitArrayLength);
+        addVisit("ArrayAssign", this::visitArrayAssign);
         setDefaultVisit((node,jef)-> null);
     }
 
@@ -130,7 +133,11 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
                     ollirCode.append(String.format(", %s",arg));
                 }
             }
-            ollirCode.append(").V;\n");
+            String returnType = "";
+            if ((!varType.isEmpty()) && varType.substring(1).equals(symbolTable.getClassName())){returnType = OllirUtils.convertType(symbolTable.getReturnType(method));} else{
+                returnType= "V";}
+
+            ollirCode.append(")." + returnType +  ";\n");
         }
         //instance method (assign)
         if (node.getJmmParent().getKind().equals("Assign")){
@@ -227,6 +234,10 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         for (var child : node.getChildren()){
             visit(child);
         }
+        if (methodName.equals("main")){
+            ollirCode.append("ret.V;\n");
+        }
+
 
         ollirCode.append("}\n"); //closing bracket of method
 
@@ -250,34 +261,108 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         return null;
     }
 
+    private List<String> visitArrayAssign(JmmNode node, String s) {
+
+        //index and value
+        String arrayName = node.get("varName");
+        List<String> index = visit(node.getJmmChild(0));
+        List<String> value = visit(node.getJmmChild(1));
+
+        if (node.getJmmChild(0).getKind().equals("IntLiteral")){
+            String tempVar = newTempVar();
+            ollirCode.append(String.format("%s.i32 :=.i32 %s;\n",tempVar,index.get(0)));
+            if (node.getJmmChild(1).getKind().equals("IntLiteral")){
+                ollirCode.append(String.format("%s[%s.i32].i32 :=.i32 %s;\n",arrayName,tempVar,value.get(0)));
+            } else {
+                ollirCode.append(String.format("%s[%s.i32].i32 :=.i32 %s.i32;\n",arrayName,tempVar,value.get(0)));
+            }
+        } else {
+            if (node.getJmmChild(1).getKind().equals("IntLiteral")){
+                ollirCode.append(String.format("%s[%s.i32].i32 :=.i32 %s;\n", arrayName, index.get(0), value.get(0)));
+            } else {
+                ollirCode.append(String.format("%s[%s.i32].i32 :=.i32 %s.i32;\n", arrayName, index.get(0), value.get(0)));
+            }
+        }
+        return null;
+    }
+
+    private List<String> visitArrayLength(JmmNode node, String s) {
+        String tempVar = newTempVar();
+        String arrayVar = visit(node.getJmmChild(0)).get(0);
+        ollirCode.append(String.format("%s.i32 :=.i32 arraylength(%s.array.i32).i32;\n",tempVar,arrayVar));
+        return Arrays.asList(tempVar,"i32");
+    }
+
+    private List<String> visitNewIntArray(JmmNode node, String varName) {
+
+        StringBuilder length = new StringBuilder();
+        List<String> lengthVar = visit(node.getJmmChild(0));
+        if (node.getJmmChild(0).getKind().equals("IntLiteral")){
+            String tempVar = newTempVar();
+            ollirCode.append(String.format("%s.i32 :=.i32 %s;\n",tempVar,lengthVar.get(0)));
+            length.append(tempVar + ".i32");
+        } else{
+            length.append(lengthVar.get(0) + ".i32");
+        }
+
+        ollirCode.append(String.format("%s.array.i32 :=.array.i32 new(array, %s).array.i32;\n",varName,length.toString()));
+
+        return null;
+    }
+    private String varScope(String varName, String methodName){
+
+        for (var var : symbolTable.getLocalVariables(methodName)){
+            if (var.getName().equals(varName)){return "local";}
+        }
+        for (int i = 0; i < symbolTable.getParameters(methodName).size(); i++){
+            if (symbolTable.getParameters(methodName).get(i).getName().equals(varName))
+                {
+                    int param = i+1;
+                    return "$" + param;
+                }
+        }
+        if (isField(varName)){
+            return "field";
+        }
+        return "";
+    }
+
     private List<String> assignVisit(JmmNode node, String s) {
 
 
         String childNodeKind = node.getJmmChild(0).getKind();
-        //New Object
-        if (childNodeKind.equals("NewObject")) {
-            visit(node.getJmmChild(0));
+        //New Object / NewIntArray
+        if (childNodeKind.equals("NewObject") || childNodeKind.equals("NewIntArray")) {
+            visit(node.getJmmChild(0),node.get("varName"));
             return null;
         }
+        String parentMethod = node.getAncestor("Method").get().get("methodName");
+        StringBuilder varNameBuilder = new StringBuilder();
+        String varScope = varScope(node.get("varName"),parentMethod); //local, $varname, field
+        //check if assigned var is a parameter
+        if (varScope.startsWith("$")){
+            varNameBuilder.append(varScope + ".");
+        }
+        varNameBuilder.append(node.get("varName"));
+        String varName = varNameBuilder.toString();
 
-        String varName = node.get("varName");
-        String varType = methodsVariablesType(node.getAncestor("Method").get().get("methodName"),varName);
+        String varType = methodsVariablesType(parentMethod,node.get("varName"));
 
         List<String> nodeVals = visit(node.getJmmChild(0));
         String assignedVar = nodeVals.get(0);
 
-        if (childNodeKind.equals("Id") || childNodeKind.equals("MethodCall") || childNodeKind.equals("BinaryOp")) {
-            if (isField(varName)){
-                ollirCode.append(String.format("putfield(this, %s.%s, %s.%s).V;",varName,varType,assignedVar,varType));
-            } else {
+        if (childNodeKind.equals("Id") || childNodeKind.equals("MethodCall") || childNodeKind.equals("BinaryOp") || childNodeKind.equals("ArrayLength")) {
+            if (!varScope.equals("field")){
                 ollirCode.append(String.format("%s.%s :=.%s %s.%s;", varName, varType, varType, assignedVar, varType));
+            } else {
+                ollirCode.append(String.format("putfield(this, %s.%s, %s.%s).V;",varName,varType,assignedVar,varType));
             }
         }
         else {
-            if (isField(varName)){
-                ollirCode.append(String.format("putfield(this, %s.%s, %s).V;",varName,varType,assignedVar));
-            } else {
+            if (!varScope.equals("field")){
                 ollirCode.append(String.format("%s.%s :=.%s %s;",varName,varType,varType,assignedVar));
+            } else {
+                ollirCode.append(String.format("putfield(this, %s.%s, %s).V;",varName,varType,assignedVar));
             }
         }
 
@@ -292,14 +377,18 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         String variableName = node.get("name");
         StringBuilder variableNameBuilder = new StringBuilder();
         String type = methodsVariablesType(methodName,variableName);
+        String varScope = varScope(variableName,methodName);
 
         //if var is a field create temp var and assign varName to that temp var
         //also verify that is not local
-        if (isField(variableName) /*isLocal()*/){
+        if (varScope.equals("field")){
             String tempVar = newTempVar();
             ollirCode.append(String.format("%s.%s :=.%s getfield(this, %s.%s).%s;\n",tempVar,type,type,variableName,type,type));
             variableNameBuilder.append(tempVar);
         } else {
+            if (varScope.startsWith("$")){
+                variableNameBuilder.append(varScope + ".");
+            }
             variableNameBuilder.append(variableName);
         }
         String varName = variableNameBuilder.toString();
@@ -327,9 +416,10 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
     private String methodsVariablesType(String methodName,String varName){
 
         String type = "";
-        List<Symbol> vars = symbolTable.getLocalVariables(methodName); //local vars
-        vars.addAll(symbolTable.getParameters(methodName)); //parameters vars
-        vars.addAll(symbolTable.getFields()); //fields vars
+        List<Symbol> vars = new ArrayList<>();
+        vars.addAll(new ArrayList<>((symbolTable.getLocalVariables(methodName)))); //local vars
+        vars.addAll(new ArrayList<>((symbolTable.getParameters(methodName)))); //parameters vars
+        vars.addAll(new ArrayList<>((symbolTable.getFields()))); //fields vars
 
         for (Symbol variable : vars){
             if (variable.getName().equals(varName)){
