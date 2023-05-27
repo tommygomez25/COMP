@@ -6,7 +6,7 @@ class IfWhileNested {
     public int func(int a){
         int i;
         boolean flag;
-		
+
         flag = true;
         i = 0;
         while (i < a) {
@@ -15,11 +15,11 @@ class IfWhileNested {
 			} else {
 				ioPlus.printResult(2);
 			}
-			
+
 			flag = !flag;
 			i = i + 1;
-		}			
-         
+		}
+
         return 1;
     }
 

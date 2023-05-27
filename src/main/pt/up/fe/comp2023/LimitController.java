@@ -7,11 +7,13 @@ public class LimitController {
     private Set<Integer> registers;
     private int maxStackSize;
     private int currentStackSize;
+    private int errorMargin;
 
     LimitController() {
         this.registers = new HashSet<>();
         this.maxStackSize = 0;
         this.currentStackSize = 0;
+        this.errorMargin = 2;
     }
 
     public void updateRegistersUpTo(int numRegisters) {
@@ -21,7 +23,7 @@ public class LimitController {
     }
 
     public int getMaxStackSize() {
-        return maxStackSize;
+        return maxStackSize + errorMargin;
     }
 
     public int getLocalLimit() {
