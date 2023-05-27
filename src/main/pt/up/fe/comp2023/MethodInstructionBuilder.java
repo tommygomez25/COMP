@@ -1,6 +1,7 @@
 package pt.up.fe.comp2023;
 
 import org.specs.comp.ollir.*;
+import pt.up.fe.comp2023.analyser.BinaryOpCheck;
 import pt.up.fe.specs.util.exceptions.NotImplementedException;
 
 import java.util.ArrayList;
@@ -12,10 +13,12 @@ import static java.lang.Integer.parseInt;
 public class MethodInstructionBuilder {
     private final Method method;
     private final String superClass;
+    private final LabelController labelController;
 
-    public MethodInstructionBuilder(Method method, String superClass) {
+    public MethodInstructionBuilder(Method method, String superClass, LabelController labelController) {
         this.method = method;
         this.superClass = superClass;
+        this.labelController = labelController;
     }
 
     public String buildInstruction(Instruction instruction) {
@@ -29,6 +32,8 @@ public class MethodInstructionBuilder {
             case NOPER -> jasminCode.append(buildSingleOpInstruction((SingleOpInstruction) instruction));
             case UNARYOPER -> jasminCode.append(buildUnaryOpInstruction((UnaryOpInstruction) instruction));
             case BINARYOPER -> jasminCode.append(buildBinaryOpInstruction((BinaryOpInstruction) instruction));
+            case BRANCH -> jasminCode.append(buildCondBranchInstruction((CondBranchInstruction) instruction));
+            case GOTO -> jasminCode.append(buildGotoInstruction((GotoInstruction) instruction));
         }
         return jasminCode.toString();
     }
@@ -53,18 +58,18 @@ public class MethodInstructionBuilder {
                     // a = a + 1
                     Operand firstOp = (Operand) firstOperand;
                     Operand LHSop = (Operand) LHS;
-                    if(Objects.equals(firstOp.getName(), LHSop.getName())){
-                        String value = valueSign + ((LiteralElement) secondOperand).getLiteral();
-                        return JasminInstruction.instIinc(register, value);
+                    int val = JasminUtils.getValue(secondOperand, valueSign);
+                    if(Objects.equals(firstOp.getName(), LHSop.getName()) && val <= 127 && val >= -128){
+                        return JasminInstruction.instIinc(register, val);
                     }
                 }
                 else if(firstOperand.isLiteral() && !secondOperand.isLiteral()) {
                     // a = 1 + a
                     Operand secondOp = (Operand) secondOperand;
                     Operand LHSop = (Operand) LHS;
-                    if (Objects.equals(secondOp.getName(), LHSop.getName())) {
-                        String value = valueSign + ((LiteralElement) firstOperand).getLiteral();
-                        return JasminInstruction.instIinc(register, value);
+                    int val = JasminUtils.getValue(firstOperand, valueSign);
+                    if (Objects.equals(secondOp.getName(), LHSop.getName()) && val <= 127 && val >= -128) {
+                        return JasminInstruction.instIinc(register, val);
                     }
                 }
 
@@ -98,13 +103,10 @@ public class MethodInstructionBuilder {
     public String buildCallInstruction(CallInstruction instruction){
         StringBuilder jasminCode = new StringBuilder();
 
-
-
-
         if(instruction.getInvocationType() == CallType.NEW){
             ElementType type = instruction.getReturnType().getTypeOfElement();
             if (type == ElementType.ARRAYREF){
-                jasminCode.append(loadElement(instruction.getFirstArg()));
+                jasminCode.append(loadElement(instruction.getListOfOperands().get(0)));
                 jasminCode.append(JasminInstruction.instNewArray());
             }
             else{
@@ -125,7 +127,7 @@ public class MethodInstructionBuilder {
             }
             String firstOpName = firstOp.getName();
             String className = JasminUtils.getQualifiedName(method.getOllirClass(), firstOpName);
-            jasminCode.append(JasminInstruction.instInvokestatic(className, methodName, retType, paramsTypes.toString()));
+            jasminCode.append(JasminInstruction.instInvokestatic(className, methodName, retType, paramsTypes.toString(), params.size()));
 
         }
         else if(instruction.getInvocationType() == CallType.invokespecial || instruction.getInvocationType() == CallType.invokevirtual){
@@ -149,12 +151,15 @@ public class MethodInstructionBuilder {
                 ClassType classType = (ClassType) instruction.getFirstArg().getType();
                 String className = JasminUtils.getQualifiedName(method.getOllirClass(), classType.getName());
                 if(callType == CallType.invokespecial){
-                    jasminCode.append(JasminInstruction.instInvokespecial(className, methodName, retType, paramsTypes.toString()));
+                    jasminCode.append(JasminInstruction.instInvokespecial(className, methodName, retType, paramsTypes.toString(), params.size()));
                 }
                 else{
-                    jasminCode.append(JasminInstruction.instInvokevirtual(className, methodName, retType, paramsTypes.toString()));
+                    jasminCode.append(JasminInstruction.instInvokevirtual(className, methodName, retType, paramsTypes.toString(), params.size()));
                 }
             }
+        }
+        else if(instruction.getInvocationType() == CallType.arraylength){
+            return loadElement(instruction.getFirstArg()) + JasminInstruction.instArraylength();
         }
         else{
             throw new NotImplementedException("Call type not implemented: " + instruction.getInvocationType());
@@ -199,6 +204,47 @@ public class MethodInstructionBuilder {
         return jasminCode.toString();
     }
 
+    private String buildBinaryOpIf(Element leftOperand, Element rightOperand, OperationType type){
+        StringBuilder jasminCode = new StringBuilder();
+
+        jasminCode.append(loadElement(leftOperand));
+
+        String label1;
+        String label2;
+
+        if(type == OperationType.LTH){
+            label1 = "LTH_" + labelController.next();
+            label2 = "LTH_" + labelController.next();
+
+            if (rightOperand.isLiteral() && ((LiteralElement) rightOperand).getLiteral().equals("0")) {
+                jasminCode.append(JasminInstruction.iflt(label1));
+            } else {
+                jasminCode.append(loadElement(rightOperand));
+                jasminCode.append(JasminInstruction.if_icmplt(label1));
+            }
+        }
+        else{
+            label1 = "GTE_" + labelController.next();
+            label2 = "GTE_" + labelController.next();
+
+            if (rightOperand.isLiteral() && ((LiteralElement) rightOperand).getLiteral().equals("0")) {
+                jasminCode.append(JasminInstruction.ifge(label1));
+            } else {
+                jasminCode.append(loadElement(rightOperand));
+                jasminCode.append(JasminInstruction.if_icmpge(label1));
+            }
+        }
+
+        jasminCode.append(JasminInstruction.instIconst(0))
+                .append(JasminInstruction.instGoto(label2))
+                .append(label1).append(":\n")
+                .append(JasminInstruction.instIconst(1))
+                .append(label2).append(":\n");
+
+
+        return jasminCode.toString();
+    }
+
     public String buildBinaryOpInstruction(BinaryOpInstruction instruction){
         StringBuilder jasminCode = new StringBuilder();
         Element leftOperand = instruction.getLeftOperand();
@@ -207,7 +253,12 @@ public class MethodInstructionBuilder {
 
         jasminCode.append(loadElement(leftOperand));
         jasminCode.append(loadElement(rightOperand));
-        jasminCode.append(JasminInstruction.instArithOp(opType));
+        if(opType == OperationType.LTH || opType == OperationType.GTE){
+            jasminCode.append(buildBinaryOpIf(leftOperand, rightOperand, opType));
+        }
+        else{
+            jasminCode.append(JasminInstruction.instArithOp(opType));
+        }
 
         return jasminCode.toString();
     }
@@ -280,6 +331,60 @@ public class MethodInstructionBuilder {
             }
             default -> throw new NotImplementedException("Type not implemented: " + type);
         }
+    }
+
+    private String ifCond(Instruction cond, String label){
+        return buildInstruction(cond) + JasminInstruction.ifne(label);
+    }
+
+    private String binaryIfCond(BinaryOpInstruction cond, String label){
+        StringBuilder jasminCode = new StringBuilder();
+        Element leftOperand = cond.getLeftOperand();
+        Element rightOperand = cond.getRightOperand();
+        OperationType opType = cond.getOperation().getOpType();
+
+        if (opType == OperationType.LTH || opType == OperationType.GTE) {
+            String comparison = "";
+            jasminCode.append(loadElement(leftOperand));
+            if (rightOperand.isLiteral() && ((LiteralElement) rightOperand).getLiteral().equals("0")) {
+                if(opType == OperationType.LTH){
+                    comparison = JasminInstruction.iflt(label);
+                }
+                else{
+                    comparison = JasminInstruction.ifge(label);
+                }
+            } else {
+                jasminCode.append(loadElement(rightOperand));
+                if(opType == OperationType.LTH){
+                    comparison = JasminInstruction.if_icmplt(label);
+                }
+                else{
+                    comparison = JasminInstruction.if_icmpge(label);
+                }
+            }
+            jasminCode.append(comparison);
+        } else {
+            jasminCode.append(ifCond(cond, label));
+        }
+
+        return jasminCode.toString();
+    }
+
+    public String buildCondBranchInstruction(CondBranchInstruction instruction){
+        StringBuilder jasminCode = new StringBuilder();
+        Instruction cond = instruction.getCondition();
+        String label = instruction.getLabel();
+        if(cond.getInstType() == InstructionType.BINARYOPER){
+            jasminCode.append(binaryIfCond((BinaryOpInstruction) cond, label));
+        }
+        else{
+            jasminCode.append(ifCond(cond, label));
+        }
+        return jasminCode.toString();
+    }
+
+    public String buildGotoInstruction(GotoInstruction instruction){
+        return JasminInstruction.instGoto(instruction.getLabel());
     }
 
 }

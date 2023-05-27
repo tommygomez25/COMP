@@ -9,6 +9,8 @@ public class OllirToJasmin {
     private final ClassUnit classUnit;
     public String superClass;
 
+    private final LabelController labelController = new LabelController();
+
     public OllirToJasmin(ClassUnit classUnit) {
         this.classUnit = classUnit;
         this.classUnit.buildVarTables();
@@ -82,26 +84,40 @@ public class OllirToJasmin {
 
         jasminCode.append(JasminUtils.getJasminType(method.getReturnType(), this.classUnit)).append("\n");
 
-        // method body
-        if(accessModifier != AccessModifiers.DEFAULT) {
-            jasminCode.append("\t.limit stack 99\n");
-            jasminCode.append("\t.limit locals 99\n");
-        }
+        MethodInstructionBuilder methodInstructionBuilder = new MethodInstructionBuilder(method, this.superClass, this.labelController);
 
-        MethodInstructionBuilder methodInstructionBuilder = new MethodInstructionBuilder(method, this.superClass);
+        JasminInstruction.limitController.resetStack();
+        JasminInstruction.limitController.updateRegistersUpTo(method.getParams().size() + 1);
 
         ArrayList<Instruction> instructions = method.getInstructions();
 
+        StringBuilder methodCode = new StringBuilder();
+
         for(Instruction instruction : instructions){
-            jasminCode.append(methodInstructionBuilder.buildInstruction(instruction));
+
+            for(String label: method.getLabels().keySet()){
+                if(method.getLabels().get(label).equals(instruction)){
+                    methodCode.append(label).append(":\n");
+                }
+            }
+
+            methodCode.append(methodInstructionBuilder.buildInstruction(instruction));
             if(instruction.getInstType() == InstructionType.CALL){
                 ElementType retType = ((CallInstruction) instruction).getReturnType().getTypeOfElement();
                 CallType callType = ((CallInstruction) instruction).getInvocationType();
                 if(!method.isConstructMethod() && (retType != ElementType.VOID || callType == CallType.invokespecial)){
-                    jasminCode.append(JasminInstruction.instPop());
+                    methodCode.append(JasminInstruction.instPop());
                 }
             }
         }
+
+        // method body
+        if(accessModifier != AccessModifiers.DEFAULT) {
+            jasminCode.append("\t.limit stack ").append(JasminInstruction.limitController.getMaxStackSize()).append("\n");
+            jasminCode.append("\t.limit locals ").append(JasminInstruction.limitController.getLocalLimit()).append("\n");
+        }
+
+        jasminCode.append(methodCode.toString());
 
         jasminCode.append(".end method\n");
 
