@@ -77,6 +77,8 @@ public class Launcher {
             }
             return;
         }
+        //print ollir code
+        System.out.println(ollirResult.getOllirCode());
 
 
         JasminResult jasminResult = new MyJasminBackend().toJasmin(ollirResult);

@@ -42,6 +42,10 @@ public class JasminUtils {
         }
         return classUnit.getClassName().replace(".", "/");
     }
+
+    public static int getValue(Element element, String sign){
+        return Integer.parseInt(sign + ((LiteralElement) element).getLiteral());
+    }
 }
 
 
