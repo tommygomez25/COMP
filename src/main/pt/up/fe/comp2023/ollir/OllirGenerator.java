@@ -17,6 +17,8 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
 
     private int tempVarNum = 0;
 
+    private int labels = 0;
+
     public OllirGenerator(MySymbolTable symbolTable) {
         this.symbolTable = symbolTable;
         this.buildVisitor();
@@ -35,13 +37,63 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         addVisit("BoolLiteral", (node,jef) -> Arrays.asList(String.format("%s.bool",(node.get("var").equals("true") ? "1": "0")), "bool") );
         addVisit("Id", this::visitIdentifier);
         addVisit("Expr", this::visitExpression);
+        addVisit("Block", this::visitExpression);
         addVisit("MethodCall", this::visitMethodCall);
         addVisit("NewObject", this::visitNewObject);
         addVisit("BinaryOp", this::visitBinaryOp);
+        addVisit("BooleanOp", this::visitBinaryOp);
         addVisit("NewIntArray", this::visitNewIntArray);
         addVisit("ArrayLength",this::visitArrayLength);
         addVisit("ArrayAssign", this::visitArrayAssign);
+        addVisit("ArrayAccess", this::visitArrayAccess);
+        addVisit("IfElse",this::visitIfElse);
+        addVisit("While",this::visitWhile);
         setDefaultVisit((node,jef)-> null);
+    }
+
+    // TODO: visitMethodCall : this.function of class
+    /*
+
+    */
+
+    private List<String> visitWhile(JmmNode node, String s) {
+
+        int labelNum = labels++;
+
+        ollirCode.append(String.format("goto while_cond_%s;\n",labelNum));
+
+        ollirCode.append(String.format("while_body_%s:\n",labelNum));
+
+        visit(node.getJmmChild(1)); //while body
+
+        ollirCode.append(String.format("while_cond_%s:\n",labelNum));
+
+        List<String> condition = visit(node.getJmmChild(0)); // while condition
+
+        ollirCode.append(String.format("if (%s.%s) goto while_body_%s;\n",condition.get(0),condition.get(1),labelNum));
+
+        return null;
+    }
+
+    private List<String> visitIfElse(JmmNode node, String s) {
+
+        int labelNum = labels++;
+
+        List<String> condition = visit(node.getJmmChild(0)); // if condition
+
+        ollirCode.append(String.format("if (%s.%s) goto then%s;\n", condition.get(0),condition.get(1),labelNum));
+
+        visit(node.getJmmChild(2)); //after if block, result of else condition true;
+
+        ollirCode.append(String.format("goto endif%s;\n",labelNum));
+
+        ollirCode.append(String.format("then%s:\n",labelNum));
+
+        visit(node.getJmmChild(1)); //else block
+
+        ollirCode.append(String.format("endif%s:\n",labelNum));
+
+        return null;
     }
 
     private List<String> visitBinaryOp(JmmNode node, String s) {
@@ -53,17 +105,19 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         StringBuilder lhs = new StringBuilder();
         StringBuilder rhs = new StringBuilder();
 
-        if ((!lhsObj.get(0).contains("."))) {
+        //basically this if contains was for if it was a intliteral (a.i32) so if it contains $1.a it works the same but it doesn't have type so wrong
+        //ultimately it begs reformat for intliteral returning namvar.type, when it should return (namevar, type), in a list
+        //above rant too bad, already fixed
+        if (!(node.getJmmChild(0).getKind().endsWith("Literal"))) { //prev. condition: (!lhsObj.get(0).contains("."))
             lhs.append(lhsObj.get(0) + "." + lhsObj.get(1));
         } else {
             lhs.append(lhsObj.get(0));
         }
-        if ((!rhsObj.get(0).contains("."))) {
+        if (!(node.getJmmChild(1).getKind().endsWith("Literal"))) { //prev. condition: (!rhsObj.get(0).contains("."))
             rhs.append(rhsObj.get(0) + "." + rhsObj.get(1));
         } else {
             rhs.append(rhsObj.get(0));
         }
-
 
         String type = "";
 
@@ -77,6 +131,11 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
             case "/":
                 ollirCode.append(String.format("%s.i32 :=.i32 %s %s.i32 %s;\n",tempVar,lhs.toString(),op,rhs.toString()));
                 type = "i32";
+                break;
+            case "&&":
+            case "<":
+                ollirCode.append(String.format("%s.bool :=.bool %s %s.bool %s;\n",tempVar,lhs.toString(),op,rhs.toString()));
+                type = "bool";
         }
 
         return Arrays.asList(tempVar,type);
@@ -105,6 +164,9 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         return false;
     }
 
+    // TODO : methodcall placement (if not just called, eg... io.println(..) but , smth = a.func()), temp var needed
+    // TODO : THIS.METHOD CLASS , ARGS ETC... return arrays as list for others
+
     private List<String> visitMethodCall(JmmNode node, String s) {
 
         //Multiple options (static method)
@@ -112,20 +174,50 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         String parentMethod = node.getAncestor("Method").get().get("methodName");
 
         List<String> args = exprArgs(node.getJmmChild(1)); //visit arguments node
-        String varName = node.getJmmChild(0).get("name"); //s.i32 -> s || io (class)
+
+        String varName = "";// node.getJmmChild(0).get("name"); //s.i32 -> s || io (class)
         String varType = "";
         String invokeType = "";
+        String method = node.get("caller");
 
+        // if a this.method() call
+        // 1st TODO change condition here to include being called and change "this";
+        // - probably already done
+        if(node.getJmmChild(0).getKind().equals("This")){
+            varName = "this";
+            invokeType = "virtual";
+            varType = OllirUtils.convertType(symbolTable.getReturnType(method));
+            String tempVar = newTempVar();
+
+            // TODO conclude append with vars
+            ollirCode.append(String.format("%s.%s :=.%s invoke%s(%s, \"%s\"",tempVar,varType,varType,invokeType,varName,method));
+            if (!args.isEmpty()){
+                for (var arg : args){
+                    ollirCode.append(String.format(", %s",arg));
+                }
+            }
+            ollirCode.append(String.format(").%s\n",varType));
+            return Arrays.asList(tempVar,varType);
+        }
+        else{
+            varName = node.getJmmChild(0).get("name");     // s.i32 -> s || io (class)
+        }
+        // TODO : AFTER ALLRIGHT CHECK THIS:
+        // check why needed "." first in varType
         if(!checkIfClass(varName)) {
             varType = "." + methodsVariablesType(parentMethod, varName);
             invokeType = "virtual";
         } else {
             invokeType = "static";
         }
-        String method = node.get("caller");
 
-        //static method
+        // TODO (functionality: done; needed: refactoring): maybe no need of two separate ifs like this
+        //  - Check if called directly, basically if its child of method(/expr) or if it's argument of something else
+        //  - in order to then attribute it to a tempVar or not
+        //  - structure to check if static or not already in place
+        //static method (maybe different condition than Expr)
         if (node.getJmmParent().getKind().equals("Expr")){
+
             ollirCode.append(String.format("invoke%s(%s%s, \"%s\"",invokeType,varName,varType,method));
 
             if (!args.isEmpty()){
@@ -139,20 +231,30 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
 
             ollirCode.append(")." + returnType +  ";\n");
         }
-        //instance method (assign)
-        if (node.getJmmParent().getKind().equals("Assign")){
+        //instance method (assign) (maybe needs change methodsVariablesType)
+        else { //if (node.getJmmParent().getKind().equals("Assign")) , previous condition
 
-            String methodVarType = methodsVariablesType(parentMethod,varName);
+            // TODO if checkIfClass check is without ".", remove wherever there's substring here
+
+            String tempVar = newTempVar();
+
+            //String methodVarType = methodsVariablesType(parentMethod,varName); // pointless varType defined above exactly like this
             StringBuilder invokevirtualbody = new StringBuilder();
 
-            invokevirtualbody.append(String.format("invokevirtual(%s.%s, \"%s\"",varName,methodVarType,method));
+            invokevirtualbody.append(String.format("invokevirtual(%s.%s, \"%s\"",varName,varType.substring(1),method));
             if (!args.isEmpty()){
                 for (var arg : args){
                     invokevirtualbody.append(String.format(", %s",arg));
                 }
             }
             invokevirtualbody.append(")");
-            return Arrays.asList(String.format(invokevirtualbody.toString()));
+            String returnType = "";
+            if ((!varType.isEmpty()) && varType.substring(1).equals(symbolTable.getClassName())){returnType = OllirUtils.convertType(symbolTable.getReturnType(method));} else{
+                returnType= "V";}
+
+            ollirCode.append(String.format("%s.%s :=.%s %s.%s;\n",tempVar,returnType,returnType,invokevirtualbody.toString(),returnType));
+
+            return Arrays.asList(tempVar,returnType);
 
         }
 
@@ -165,11 +267,11 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         List<String> list = new ArrayList<>();
 
         for(var child : node.getChildren()){
-            if (child.getKind().equals("BinaryOp")){
+            if (child.getKind().endsWith("Literal") || child.getKind().equals("Id")){
+                list.add(visit(child).get(0));
+            } else {
                 List<String> args = visit(child);
                 list.add(args.get(0)+ "." + args.get(1));
-            } else {
-                list.add(visit(child).get(0));
             }
         }
 
@@ -238,12 +340,10 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
             ollirCode.append("ret.V;\n");
         }
 
-
         ollirCode.append("}\n"); //closing bracket of method
 
         return null;
     }
-
 
     private List<String> returnFromMethodVisit(JmmNode node, String jef) {
 
@@ -260,6 +360,24 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
 
         return null;
     }
+
+    private List<String> visitArrayAccess(JmmNode node, String s) {
+
+        String tempVar = newTempVar();
+
+        List<String> arrayName = visit(node.getJmmChild(0)); // a[0] : a, i32
+
+        List<String> arrayIndex = visit(node.getJmmChild(1).getJmmChild(0)); //firstchild : Accessors, child of that is the actual thing
+
+        if(node.getJmmChild(1).getJmmChild(0).getKind().endsWith("Literal")){
+            ollirCode.append(String.format("%s.i32 :=.i32 %s[%s].i32;\n",tempVar,arrayName.get(0),arrayIndex.get(0)));
+        } else {
+            ollirCode.append(String.format("%s.i32 :=.i32 %s[%s.%s].i32;\n",tempVar,arrayName.get(0),arrayIndex.get(0),arrayIndex.get(1)));
+        }
+
+        return Arrays.asList(tempVar,"i32"); //it's always int
+    }
+
 
     private List<String> visitArrayAssign(JmmNode node, String s) {
 
@@ -351,7 +469,9 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         List<String> nodeVals = visit(node.getJmmChild(0));
         String assignedVar = nodeVals.get(0);
 
-        if (childNodeKind.equals("Id") || childNodeKind.equals("MethodCall") || childNodeKind.equals("BinaryOp") || childNodeKind.equals("ArrayLength")) {
+        //refactoring IntLiteral here aswell xd
+
+        if (childNodeKind.equals("Id") || childNodeKind.equals("MethodCall") || childNodeKind.equals("BinaryOp") || childNodeKind.equals("BooleanOp")  || childNodeKind.equals("ArrayLength") || childNodeKind.equals("ArrayAccess")) {
             if (!varScope.equals("field")){
                 ollirCode.append(String.format("%s.%s :=.%s %s.%s;", varName, varType, varType, assignedVar, varType));
             } else {
