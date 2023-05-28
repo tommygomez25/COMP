@@ -4,7 +4,10 @@ import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.ollir.JmmOptimization;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp2023.analyser.MySymbolTable;
+import pt.up.fe.comp2023.optimizer.ConstantPropagation;
 import pt.up.fe.comp2023.optimizer.LivenessAnalysis;
+
+import java.util.HashMap;
 
 
 public class JmmOptimizationImpl implements JmmOptimization{
@@ -40,5 +43,25 @@ public class JmmOptimizationImpl implements JmmOptimization{
         livenessAnalysis.allocateRegisters();
 
         return ollirResult;
+    }
+
+    @Override
+    public JmmSemanticsResult optimize(JmmSemanticsResult semanticsResult){
+        if (semanticsResult.getConfig().getOrDefault("optimize", "false").equals("false")) {
+            return semanticsResult;
+        }
+
+        ConstantPropagation constantPropagation = new ConstantPropagation();
+
+        do {
+            constantPropagation = new ConstantPropagation();
+            constantPropagation.visit(semanticsResult.getRootNode(), new HashMap<>());
+        } while (constantPropagation.hasChanged());
+
+        // simplify while
+        constantPropagation = new ConstantPropagation(true);
+        constantPropagation.visit(semanticsResult.getRootNode(), new HashMap<>());
+
+        return semanticsResult;
     }
 }
