@@ -50,6 +50,7 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         addVisit("While",this::visitWhile);
         addVisit("Not", this::visitNot);
         addVisit("Parenthesis",this::visitParenthesis);
+        addVisit("This",(node,jef) -> Arrays.asList("this",symbolTable.getClassName()));
         setDefaultVisit((node,jef)-> null);
     }
 
