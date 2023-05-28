@@ -7,14 +7,12 @@ import pt.up.fe.comp.jmm.ast.JmmNodeImpl;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.function.BiFunction;
 
 public class ConstantPropagation extends AJmmVisitor<HashMap<String, JmmNode>, String> {
 
     private boolean changed = false;
     private final boolean simpleWhile;
     public ConstantPropagation() {
-        this.changed = false;
         this.simpleWhile = false;
     }
 
@@ -30,6 +28,8 @@ public class ConstantPropagation extends AJmmVisitor<HashMap<String, JmmNode>, S
         addVisit("BinaryOp", this::binaryOpVisitor);
         addVisit("Id", this::idVisitor);
         addVisit("Not", this::notVisitor);
+        addVisit("IfElse", this::ifElseVisitor);
+        addVisit("While", this::whileVisitor);
 
         setDefaultVisit(this::defaultVisitor);
     }
@@ -70,17 +70,16 @@ public class ConstantPropagation extends AJmmVisitor<HashMap<String, JmmNode>, S
     }
 
     private String assignVisitor(JmmNode node, HashMap<String, JmmNode> map) {
-        JmmNode identifier = node;
         JmmNode expression = node.getJmmChild(0);
-        if (identifier.getKind().equals("Accessors")) {
-            visit(identifier, map);
+        if (node.getKind().equals("Accessors")) {
+            visit(node, map);
             return "";
         }
         if (expression.getKind().equals("IntLiteral") || expression.getKind().equals("BoolLiteral")) {
-            map.put(identifier.get("varName"), expression);
+            map.put(node.get("varName"), expression);
         } else {
             visit(expression, map);
-            map.remove(identifier.get("varName"));
+            map.remove(node.get("varName"));
         }
         return "";
     }
@@ -105,7 +104,7 @@ public class ConstantPropagation extends AJmmVisitor<HashMap<String, JmmNode>, S
             changed = true;
             return "changed";
         }
-        return "";
+        return leftVal;
     }
 
     private String idVisitor(JmmNode node, HashMap<String, JmmNode> map) {
@@ -149,5 +148,109 @@ public class ConstantPropagation extends AJmmVisitor<HashMap<String, JmmNode>, S
             return "changed";
         }
         return "";
+    }
+
+    private String ifElseVisitor(JmmNode node, HashMap<String, JmmNode> map){
+        JmmNode cond = node.getJmmChild(0);
+        JmmNode thenStat = node.getJmmChild(1);
+        JmmNode elseStat = node.getJmmChild(2);
+        visit(cond, map);
+
+        if(cond.getKind().equals("BoolLiteral")){
+            JmmNode nextExpression = cond.get("var").equals("1") ? thenStat : elseStat;
+            visit(nextExpression, map);
+            // fold if
+            ConstantFold.replaceNode(node, nextExpression);
+            
+            changed = true;
+            return "";
+        }
+
+        HashMap<String, JmmNode> thenMap = new HashMap<>(map);
+        HashMap<String, JmmNode> elseMap = new HashMap<>(map);
+
+        visit(thenStat, thenMap);
+        visit(elseStat, elseMap);
+
+        updateMap(map, thenMap);
+        updateMap(map, elseMap);
+
+        return "";
+    }
+
+    private String whileVisitor(JmmNode jmmNode, HashMap<String, JmmNode> map) {
+        JmmNode whileCond = jmmNode.getJmmChild(0);
+        JmmNode whileBody = jmmNode.getJmmChild(1);
+        HashMap<String, JmmNode> newMap = new HashMap<>();
+        HashMap<String, JmmNode> copyMap = new HashMap<>(map);
+
+        if (simpleWhile){
+            JmmNode simpleCond = getSimpleCond(jmmNode, copyMap);
+
+            ConstantFold constantFold = new ConstantFold();
+
+            if(simpleCond.getKind().equals("BoolLiteral")){
+                if(simpleCond.get("var").equals("0")) {
+                    constantFold.foldConstantWhile(jmmNode);
+                }
+                else{
+                    jmmNode.put("dowhile","1");
+                }
+            }
+
+            for(JmmNode child : whileCond.getChildren()) {
+                child.setParent(whileCond);
+            }
+        }
+        else{
+            visit(whileCond, newMap);
+        }
+
+        getConstMap(whileBody, copyMap);
+        visit(whileBody, copyMap);
+        updateMap(map, copyMap);
+
+        return "";
+    }
+
+    private JmmNode copy(JmmNode jmmNode, JmmNode parent) {
+        JmmNode copy = new JmmNodeImpl(jmmNode.getKind());
+
+        for (String attr: jmmNode.getAttributes()) {
+            copy.put(attr, jmmNode.get(attr));
+        }
+
+        for (int i=0; i < jmmNode.getChildren().size(); i++) {
+            JmmNode child = jmmNode.getJmmChild(i);
+            JmmNode copyChild = copy(child, copy);
+            copy.add(copyChild, i);
+            child.setParent(copy);
+        }
+        copy.setParent(parent);
+
+        return copy;
+    }
+
+    private JmmNode getSimpleCond(JmmNode node, HashMap<String, JmmNode> map){
+        JmmNode whileCopy = copy(node, node.getJmmParent());
+        JmmNode whileCond = whileCopy.getJmmChild(0);
+        String changed;
+        do{
+            changed = visit(whileCond, map);
+            whileCopy = copy(whileCopy, node.getJmmParent());
+            whileCond = whileCopy.getJmmChild(0);
+        }while(changed.equals("changed") && !whileCond.getKind().equals("BoolLiteral"));
+        return whileCond;
+    }
+
+    private void getConstMap(JmmNode node, HashMap<String, JmmNode> map){
+        if(node.getKind().equals("Assignment") && node.getJmmChild(0).getAttributes().contains("name")){
+            String name = node.getJmmChild(0).get("name");
+            map.remove(name);
+        }
+
+        for(JmmNode child : node.getChildren()){
+            getConstMap(child, map);
+        }
     }
 }

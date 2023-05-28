@@ -56,5 +56,9 @@ public class ConstantFold {
         replaceNode(node, newNode);
     }
 
+    public void foldConstantWhile(JmmNode node){
+        node.getJmmParent().removeJmmChild(node);
+    }
+
 
 }
