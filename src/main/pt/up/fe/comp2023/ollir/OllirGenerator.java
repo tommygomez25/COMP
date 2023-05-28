@@ -401,11 +401,11 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         String returnType = OllirUtils.convertType(symbolTable.getReturnType(node.getJmmParent().get("methodName")));
         if (!node.getChildren().isEmpty()) {
             String retVal = visit(node.getJmmChild(0)).get(0);
-            if (node.getJmmChild(0).getKind().equals("BinaryOp")){
+            if (node.getJmmChild(0).getKind().equals("Id") || node.getJmmChild(0).getKind().endsWith("Literal")){
+                ollirCode.append(String.format("ret.%s %s;\n", returnType, retVal));
+            } else {
                 ollirCode.append(String.format("ret.%s %s.%s;\n", returnType,
                         retVal,returnType));
-            } else {
-                ollirCode.append(String.format("ret.%s %s;\n", returnType, retVal));
             }
         }
 
