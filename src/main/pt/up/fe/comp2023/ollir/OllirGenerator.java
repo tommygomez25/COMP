@@ -48,7 +48,27 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         addVisit("ArrayAccess", this::visitArrayAccess);
         addVisit("IfElse",this::visitIfElse);
         addVisit("While",this::visitWhile);
+        addVisit("Not", this::visitNot);
+        addVisit("Parenthesis",this::visitParenthesis);
         setDefaultVisit((node,jef)-> null);
+    }
+
+    private List<String> visitParenthesis(JmmNode node, String s) {
+
+        List<String> childNode = visit(node.getJmmChild(0));
+        return Arrays.asList(childNode.get(0),childNode.get(1));
+    }
+
+    // ! smth eg (!a<b)
+    private List<String> visitNot(JmmNode node, String s) {
+
+        String tempVar = newTempVar();
+        List<String> childNode = visit(node.getJmmChild(0));
+        String type = childNode.get(1);
+
+        ollirCode.append(String.format("%s.%s :=.%s !.%s %s.%s;\n",tempVar,type,type,type,childNode.get(0),type));
+
+        return Arrays.asList(tempVar,type);
     }
 
     // TODO: visitMethodCall : this.function of class
@@ -470,19 +490,20 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         String assignedVar = nodeVals.get(0);
 
         //refactoring IntLiteral here aswell xd
-
-        if (childNodeKind.equals("Id") || childNodeKind.equals("MethodCall") || childNodeKind.equals("BinaryOp") || childNodeKind.equals("BooleanOp")  || childNodeKind.equals("ArrayLength") || childNodeKind.equals("ArrayAccess")) {
-            if (!varScope.equals("field")){
-                ollirCode.append(String.format("%s.%s :=.%s %s.%s;", varName, varType, varType, assignedVar, varType));
-            } else {
-                ollirCode.append(String.format("putfield(this, %s.%s, %s.%s).V;",varName,varType,assignedVar,varType));
-            }
-        }
-        else {
+        // previous condition: childNodeKind.equals("Id") || childNodeKind.equals("MethodCall") || childNodeKind.equals("BinaryOp") || childNodeKind.equals("BooleanOp")  || childNodeKind.equals("ArrayLength") || childNodeKind.equals("ArrayAccess")
+        // inverted body of if and else previously
+        if (childNodeKind.endsWith("Literal")) {
             if (!varScope.equals("field")){
                 ollirCode.append(String.format("%s.%s :=.%s %s;",varName,varType,varType,assignedVar));
             } else {
                 ollirCode.append(String.format("putfield(this, %s.%s, %s).V;",varName,varType,assignedVar));
+            }
+        }
+        else {
+            if (!varScope.equals("field")){
+                ollirCode.append(String.format("%s.%s :=.%s %s.%s;", varName, varType, varType, assignedVar, varType));
+            } else {
+                ollirCode.append(String.format("putfield(this, %s.%s, %s.%s).V;",varName,varType,assignedVar,varType));
             }
         }
 
