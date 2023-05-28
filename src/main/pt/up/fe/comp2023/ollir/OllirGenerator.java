@@ -204,7 +204,7 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         // 1st TODO change condition here to include being called and change "this";
         // - probably already done
         if(node.getJmmChild(0).getKind().equals("This")){
-            varName = "this";
+            varName = "this" + "." + symbolTable.getClassName();
             invokeType = "virtual";
             varType = OllirUtils.convertType(symbolTable.getReturnType(method));
             String tempVar = newTempVar();
@@ -216,7 +216,7 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
                     ollirCode.append(String.format(", %s",arg));
                 }
             }
-            ollirCode.append(String.format(").%s\n",varType));
+            ollirCode.append(String.format(").%s;\n",varType));
             return Arrays.asList(tempVar,varType);
         }
         else{
