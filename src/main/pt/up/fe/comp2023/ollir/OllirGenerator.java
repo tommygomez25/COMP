@@ -161,14 +161,23 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
         return Arrays.asList(tempVar,type);
     }
 
-    private List<String> visitNewObject(JmmNode node, String s) {
+    private List<String> visitNewObject(JmmNode node, String var) {
 
         String className = node.get("name");
 
-        String var = node.getJmmParent().get("varName");
+        //String var = node.getJmmParent().get("varName");
 
-        ollirCode.append(String.format("%s.%s :=.%s new(%s).%s;\n",var,className,className,className,className));
-        ollirCode.append(String.format("invokespecial(%s.%s, \"<init>\").V;\n",var,className));
+        String tempVar = newTempVar();
+
+        ollirCode.append(String.format("%s.%s :=.%s new(%s).%s;\n",tempVar,className,className,className,className));
+        ollirCode.append(String.format("invokespecial(%s.%s, \"<init>\").V;\n",tempVar,className));
+
+        if (node.getJmmParent().getKind().equals("Assign")){
+            ollirCode.append(String.format("%s.%s :=.%s %s.%s;\n",var,className,className,tempVar,className));
+        } else {
+            return Arrays.asList(tempVar,className);
+        }
+        //ollirCode.append(String.format(""));
 
         return null;
     }
@@ -180,7 +189,7 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
                 return true;
             }
         }
-        if (varName.equals(symbolTable.getClassName())) {return true;}
+        //if (varName.equals(symbolTable.getClassName())) {return true;}
         return false;
     }
 
@@ -237,9 +246,16 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
             varName = node.getJmmChild(0).get("name");     // s.i32 -> s || io (class)
         }
         // TODO : AFTER ALLRIGHT CHECK THIS:
+        // can be newObject
         // check why needed "." first in varType
         if(!checkIfClass(varName)) {
-            varType = "." + methodsVariablesType(parentMethod, varName);
+            if (node.getJmmChild(0).getKind().equals("NewObject")){
+                List<String> newObj = visit(node.getJmmChild(0));
+                varName = newObj.get(0);
+                varType = "." + newObj.get(1);
+            }else {
+                varType = "." + methodsVariablesType(parentMethod, varName);
+            }
             invokeType = "virtual";
         } else {
             invokeType = "static";
