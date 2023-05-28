@@ -113,7 +113,7 @@ public class OllirToJasmin {
 
         // method body
         if(accessModifier != AccessModifiers.DEFAULT) {
-            jasminCode.append("\t.limit stack ").append("99").append("\n");
+            jasminCode.append("\t.limit stack ").append(JasminInstruction.limitController.getMaxStackSize()).append("\n");
             jasminCode.append("\t.limit locals ").append(JasminInstruction.limitController.getLocalLimit()).append("\n");
         }
 
