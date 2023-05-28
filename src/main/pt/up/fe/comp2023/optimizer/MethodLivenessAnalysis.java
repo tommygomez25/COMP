@@ -66,42 +66,41 @@ public class MethodLivenessAnalysis {
         if (node.getNodeType().equals(NodeType.BEGIN) || node.getNodeType().equals(NodeType.END)){
             return;
         }
-
-        if (node instanceof AssignInstruction instruction){
-            addToUseDefSet(useDef, instruction.getDest(), use);
-            getDefAndUse(instruction.getRhs(), node);
-        }
-        else if( node instanceof UnaryOpInstruction instruction){
-            addToUseDefSet(useDef, instruction.getOperand(), use);
-        }
-        else if (node instanceof BinaryOpInstruction instruction){
-            addToUseDefSet(useDef, instruction.getLeftOperand(), use);
-            addToUseDefSet(useDef, instruction.getRightOperand(), use);
-        }
-        else if (node instanceof ReturnInstruction instruction){
-            addToUseDefSet(useDef, instruction.getOperand(), use);
-        } else if (node instanceof CallInstruction instruction) {
-            addToUseDefSet(useDef, instruction.getFirstArg(), use);
-            if (instruction.getListOfOperands() != null){
-                for( Element element: instruction.getListOfOperands()){
+        // create switch to replace following if
+        switch (node.getClass().getSimpleName()) {
+            case "AssignInstruction" -> {
+                addToUseDefSet(useDef, ((AssignInstruction) node).getDest(), use);
+                getDefAndUse(((AssignInstruction) node).getRhs(), node);
+            }
+            case "UnaryOpInstruction" -> addToUseDefSet(useDef, ((UnaryOpInstruction) node).getOperand(), use);
+            case "BinaryOpInstruction" -> {
+                addToUseDefSet(useDef, ((BinaryOpInstruction) node).getLeftOperand(), use);
+                addToUseDefSet(useDef, ((BinaryOpInstruction) node).getRightOperand(), use);
+            }
+            case "ReturnInstruction" -> addToUseDefSet(useDef, ((ReturnInstruction) node).getOperand(), use);
+            case "CallInstruction" -> {
+                addToUseDefSet(useDef, ((CallInstruction) node).getFirstArg(), use);
+                if (((CallInstruction) node).getListOfOperands() != null) {
+                    for (Element element : ((CallInstruction) node).getListOfOperands()) {
+                        addToUseDefSet(useDef, element, use);
+                    }
+                }
+            }
+            case "GetFieldInstruction" -> addToUseDefSet(useDef, ((GetFieldInstruction) node).getFirstOperand(), use);
+            case "PutFieldInstruction" -> {
+                addToUseDefSet(useDef, ((PutFieldInstruction) node).getFirstOperand(), use);
+                addToUseDefSet(useDef, ((PutFieldInstruction) node).getThirdOperand(), use);
+            }
+            case "SingleOpInstruction" -> addToUseDefSet(useDef, ((SingleOpInstruction) node).getSingleOperand(), use);
+            case "OpCondInstruction" -> {
+                for (Element element : ((OpCondInstruction) node).getOperands()) {
                     addToUseDefSet(useDef, element, use);
                 }
             }
-        }
-        else if (node instanceof GetFieldInstruction instruction) {
-            addToUseDefSet(useDef, instruction.getFirstOperand(), use);
-        } else if (node instanceof PutFieldInstruction instruction) {
-            addToUseDefSet(useDef, instruction.getFirstOperand(), use);
-            addToUseDefSet(useDef, instruction.getThirdOperand(), use);
-        } else if (node instanceof SingleOpInstruction instruction) {
-            addToUseDefSet(useDef, instruction.getSingleOperand(), use);
-        } else if (node instanceof OpCondInstruction instruction) {
-            for (Element operand: instruction.getOperands()) {
-                addToUseDefSet(useDef, operand, use);
-            }
-        } else if (node instanceof SingleOpCondInstruction instruction) {
-            for (Element operand: instruction.getOperands()) {
-                addToUseDefSet(useDef, operand, use);
+            case "SingleOpCondInstruction" -> {
+                for (Element element : ((SingleOpCondInstruction) node).getOperands()) {
+                    addToUseDefSet(useDef, element, use);
+                }
             }
         }
     }

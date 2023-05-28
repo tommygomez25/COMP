@@ -161,7 +161,7 @@ public class ConstantPropagation extends AJmmVisitor<HashMap<String, JmmNode>, S
             visit(nextExpression, map);
             // fold if
             ConstantFold.replaceNode(node, nextExpression);
-            
+
             changed = true;
             return "";
         }
