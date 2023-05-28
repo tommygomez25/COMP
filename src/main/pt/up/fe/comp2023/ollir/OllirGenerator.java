@@ -200,6 +200,8 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
     private List<String> visitMethodCall(JmmNode node, String s) {
 
         //Multiple options (static method)
+        JmmNode firstChild = node.getJmmChild(0).getKind().equals("Parenthesis") ? node.getJmmChild(0).getJmmChild(0): node.getJmmChild(0);
+
 
         String parentMethod = node.getAncestor("Method").get().get("methodName");
 
@@ -212,7 +214,7 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
 
         // if a this.method() call
 
-        if(node.getJmmChild(0).getKind().equals("This")){
+        if(firstChild.getKind().equals("This")){
             varName = "this" + "." + symbolTable.getClassName();
             invokeType = "virtual";
             varType = OllirUtils.convertType(symbolTable.getReturnType(method));
@@ -244,14 +246,14 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
             }
         }
         else{
-            varName = node.getJmmChild(0).get("name");     // s.i32 -> s || io (class)
+            varName = firstChild.get("name");     // s.i32 -> s || io (class) //watch for (parenthesis)
         }
         // TODO : AFTER ALLRIGHT CHECK THIS:
         // can be newObject
         // check why needed "." first in varType
         if(!checkIfClass(varName)) {
-            if (node.getJmmChild(0).getKind().equals("NewObject")){
-                List<String> newObj = visit(node.getJmmChild(0));
+            if (firstChild.getKind().equals("NewObject")){
+                List<String> newObj = visit(firstChild);
                 varName = newObj.get(0);
                 varType = "." + newObj.get(1);
             }else {
