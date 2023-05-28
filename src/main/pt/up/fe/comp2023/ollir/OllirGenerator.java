@@ -195,21 +195,34 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
 
         List<String> args = exprArgs(node.getJmmChild(1)); //visit arguments node
 
-        String varName = "";// node.getJmmChild(0).get("name"); //s.i32 -> s || io (class)
+        String varName = ""; // node.getJmmChild(0).get("name"); //s.i32 -> s || io (class)
         String varType = "";
         String invokeType = "";
         String method = node.get("caller");
 
         // if a this.method() call
-        // 1st TODO change condition here to include being called and change "this";
-        // - probably already done
+
         if(node.getJmmChild(0).getKind().equals("This")){
             varName = "this" + "." + symbolTable.getClassName();
             invokeType = "virtual";
             varType = OllirUtils.convertType(symbolTable.getReturnType(method));
+
+            //if its called 'alone' : this.method //or assigned/as arg of smth else : j = this.method
+            if(node.getJmmParent().getKind().equals("Expr")){
+                ollirCode.append(String.format("invoke%s(%s, \"%s\"",invokeType,varName,method));
+                if (!args.isEmpty()){
+                    for (var arg : args){
+                        ollirCode.append(String.format(", %s",arg));
+                    }
+                }
+                ollirCode.append(String.format(").%s;\n",varType));
+                return null; //no need to return list
+            }
+            //or assigned/as arg of smth else : j = this.method //tempvar = invoke...
+            else {
+
             String tempVar = newTempVar();
 
-            // TODO conclude append with vars
             ollirCode.append(String.format("%s.%s :=.%s invoke%s(%s, \"%s\"",tempVar,varType,varType,invokeType,varName,method));
             if (!args.isEmpty()){
                 for (var arg : args){
@@ -218,6 +231,7 @@ public class OllirGenerator extends AJmmVisitor<String, List<String>> {
             }
             ollirCode.append(String.format(").%s;\n",varType));
             return Arrays.asList(tempVar,varType);
+            }
         }
         else{
             varName = node.getJmmChild(0).get("name");     // s.i32 -> s || io (class)
