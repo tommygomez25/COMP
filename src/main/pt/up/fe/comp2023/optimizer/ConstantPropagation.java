@@ -24,13 +24,8 @@ public class ConstantPropagation extends AJmmVisitor<HashMap<String, JmmNode>, S
 
     @Override
     protected void buildVisitor() {
-        addVisit("MethodBody", this::methodBodyVisitor);
-        /*addVisit("Identifier", this::idVisitor);
-        addVisit("Assignment", this::assignVisitor);
-        addVisit("BinaryOp", this::binaryOpVisitor);
-        addVisit("NotExpression", this::notVisitor);
-        addVisit("IfThenElseStatement", this::ifThenElseStatVisitor);
-        addVisit("WhileStatement", this::whileStatVisitor);*/
+        addVisit("Method", this::methodBodyVisitor);
+        addVisit("Assign", this::assignVisitor);
 
         setDefaultVisit(this::defaultVisitor);
     }
@@ -66,6 +61,22 @@ public class ConstantPropagation extends AJmmVisitor<HashMap<String, JmmNode>, S
     private String defaultVisitor(JmmNode jmmNode, HashMap<String, JmmNode> map) {
         for(JmmNode child : jmmNode.getChildren()) {
             visit(child, map);
+        }
+        return "";
+    }
+
+    private String assignVisitor(JmmNode node, HashMap<String, JmmNode> map) {
+        JmmNode identifier = node;
+        JmmNode expression = node.getJmmChild(0);
+        if (identifier.getKind().equals("Accessors")) {
+            visit(identifier, map);
+            return "";
+        }
+        if (expression.getKind().equals("IntLiteral") || expression.getKind().equals("BoolLiteral")) {
+            map.put(identifier.get("varName"), expression);
+        } else {
+            visit(expression, map);
+            map.remove(identifier.get("varName"));
         }
         return "";
     }
